@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="840" viewBox="0 0 1600 840" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="40" x2="1480" y2="840" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F172A" />
+      <stop offset="1" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="glow" x1="230" y1="120" x2="480" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22C55E" />
+      <stop offset="1" stop-color="#14B8A6" />
+    </linearGradient>
+    <radialGradient id="halo" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1240 120) rotate(130) scale(560 880)">
+      <stop offset="0" stop-color="#14B8A6" stop-opacity="0.26" />
+      <stop offset="1" stop-color="#14B8A6" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="840" rx="56" fill="url(#bg)" />
+  <rect width="1600" height="840" rx="56" fill="url(#halo)" />
+  <rect x="104" y="104" width="368" height="368" rx="84" fill="#020617" fill-opacity="0.48" stroke="#1E293B" stroke-width="2" />
+  <ellipse cx="288" cy="190" rx="102" ry="38" fill="url(#glow)" />
+  <path d="M186 190V250C186 271.159 231.667 288.31 288 288.31C344.333 288.31 390 271.159 390 250V190" fill="url(#glow)" />
+  <ellipse cx="288" cy="250" rx="102" ry="38" fill="url(#glow)" />
+  <path d="M186 250V314C186 335.159 231.667 352.31 288 352.31C344.333 352.31 390 335.159 390 314V250" fill="url(#glow)" />
+  <ellipse cx="288" cy="314" rx="102" ry="38" fill="url(#glow)" />
+  <path d="M346 140L242 292H286L230 420L333 262H289L346 140Z" fill="#F8FAFC" fill-opacity="0.9" />
+  <text x="560" y="268" fill="#F8FAFC" font-family="Helvetica, Arial, sans-serif" font-size="120" font-weight="700" letter-spacing="-3">Hypertill DB</text>
+  <text x="566" y="352" fill="#CBD5E1" font-family="Helvetica, Arial, sans-serif" font-size="44" font-weight="500">Reactive offline-first database framework</text>
+  <text x="566" y="454" fill="#94A3B8" font-family="Helvetica, Arial, sans-serif" font-size="32">Forked and maintained for HelaPoint platform workloads</text>
+</svg>

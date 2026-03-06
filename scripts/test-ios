@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -x
+set -e
+
+xcodebuild -workspace native/iosTest/HypertillTester.xcworkspace -scheme 'HypertillTester' -destination 'name=iPhone 16,OS=18.1' test

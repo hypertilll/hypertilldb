@@ -1,0 +1,10 @@
+rootProject.name = 'hypertillTest'
+include ':hypertilldb'
+project(':hypertilldb').projectDir = new File(rootProject.projectDir, '../../native/android')
+
+include ':hypertilldb-jsi'
+project(':hypertilldb-jsi').projectDir = new File(rootProject.projectDir, '../../native/android-jsi')
+
+include ':app'
+
+includeBuild('../../node_modules/@react-native/gradle-plugin')

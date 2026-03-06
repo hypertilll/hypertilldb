@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F172A" />
+      <stop offset="1" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="db" x1="160" y1="120" x2="352" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22C55E" />
+      <stop offset="1" stop-color="#14B8A6" />
+    </linearGradient>
+    <linearGradient id="accent" x1="176" y1="128" x2="336" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FAFC" stop-opacity="0.9" />
+      <stop offset="1" stop-color="#CFFAFE" stop-opacity="0.3" />
+    </linearGradient>
+  </defs>
+  <rect x="48" y="48" width="416" height="416" rx="96" fill="url(#bg)" />
+  <ellipse cx="256" cy="164" rx="112" ry="42" fill="url(#db)" />
+  <path d="M144 164V226C144 249.196 194.144 268 256 268C317.856 268 368 249.196 368 226V164" fill="url(#db)" />
+  <ellipse cx="256" cy="226" rx="112" ry="42" fill="url(#db)" />
+  <path d="M144 226V290C144 313.196 194.144 332 256 332C317.856 332 368 313.196 368 290V226" fill="url(#db)" />
+  <ellipse cx="256" cy="290" rx="112" ry="42" fill="url(#db)" />
+  <path d="M144 290V352C144 375.196 194.144 394 256 394C317.856 394 368 375.196 368 352V290" fill="url(#db)" />
+  <ellipse cx="256" cy="352" rx="112" ry="42" fill="url(#db)" />
+  <path d="M318 118L205 281H254L194 394L306 245H258L318 118Z" fill="url(#accent)" />
+</svg>
