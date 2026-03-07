@@ -3,13 +3,13 @@ title: Contributing
 hide_title: true
 ---
 
-<img src="https://github.com/helapoint/hypertill-db/raw/master/assets/needyou.jpg" alt="We need you" width="220" />
+<img src="https://github.com/hypertilll/hypertillDB/raw/main/assets/needyou.jpg" alt="We need you" width="220" />
 
 **Hypertill DB is an open-source project and it needs your help to thrive!**
 
 If there's a missing feature, a bug, or other improvement you'd like, we encourage you to contribute. Feel free to open an issue to get guidance, and use this guide for project setup, testing, and release details.
 
-If you're just getting started, see [good first issues](https://github.com/helapoint/hypertill-db/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) that are easy to contribute to.
+If you're just getting started, see [good first issues](https://github.com/hypertilll/hypertillDB/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) that are easy to contribute to.
 
 If you make or are considering making an app using Hypertill DB, please let us know!
 
@@ -38,8 +38,8 @@ If you make or are considering making an app using Hypertill DB, please let us k
 ### Download source and dependencies
 
 ```bash
-git clone https://github.com/helapoint/hypertill-db.git
-cd hypertill-db
+git clone https://github.com/hypertilll/hypertillDB.git
+cd hypertillDB
 yarn
 ```
 
@@ -59,7 +59,7 @@ Then in your app:
 mkdir -p node_modules/@hypertill
 cd node_modules/@hypertill
 rm -fr db
-ln -s /path/to/hypertill-db/dev db
+ln -s /path/to/hypertillDB/dev db
 ```
 
 **This will work in Webpack but not in Metro** (React Native). Metro doesn't follow symlinks. Instead, you can compile Hypertill DB directly to your project:

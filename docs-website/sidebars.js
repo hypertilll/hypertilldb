@@ -16,10 +16,7 @@ const sidebars = {
   docs: {
     About: [
       'docs/README',
-      // 'docs/Why',
-      // 'docs/WhoUses',
-      // 'docs/Example',
-      // 'docs/Demo',
+      'docs/ExpoDemo',
     ],
     Setup: [
       'docs/Installation',

@@ -30,18 +30,18 @@
     "ktlint:format": "cd native/androidTest; ./gradlew ktlintFormat",
     "android:emulator": "./scripts/emulatorWithJavaCheck",
     "cocoapods": "rm -fr native/iosTest/build/generated && cd native/iosTest && bundle exec pod update hermes-engine --no-repo-update && bundle exec pod install",
-    "docs:version": "cd docs-website && yarn version --no-git-tag-version --no-commit-hooks --new-version",
-    "docs:dev": "./scripts/update-docusaurus && cd docs-website && yarn start",
-    "docs:build": "./scripts/update-docusaurus && cd docs-website && yarn build",
-    "docs:deploy": "./scripts/update-docusaurus && cd docs-website && yarn deploy",
+    "docs:version": "cd docs-website && npm version --no-git-tag-version",
+    "docs:dev": "./scripts/update-docusaurus && cd docs-website && npm run start",
+    "docs:build": "./scripts/update-docusaurus && cd docs-website && npm run build",
+    "docs:deploy": "./scripts/update-docusaurus && cd docs-website && npm run deploy",
     "postinstall": "patch-package"
   },
   "types": "src/index.d.ts",
   "author": "HelaPoint",
-  "homepage": "https://github.com/helapoint/hypertill-db#readme",
+  "homepage": "https://github.com/hypertilll/hypertillDB#readme",
   "bugs": {
     "email": "contact@helapoint.com",
-    "url": "https://github.com/helapoint/hypertill-db/issues"
+    "url": "https://github.com/hypertilll/hypertillDB/issues"
   },
   "license": "MIT",
   "keywords": [
@@ -64,7 +64,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/helapoint/hypertill-db.git"
+    "url": "https://github.com/hypertilll/hypertillDB.git"
   },
   "dependencies": {
     "@expo/config-plugins": ">=8.0.0 <11.0.0",

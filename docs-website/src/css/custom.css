@@ -1,31 +1,515 @@
-/**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
- */
+/* Modern Hypertill DB Theme - Green/Purple Accent */
 
-/* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #5e983d;
-  --ifm-color-primary-dark: #558937;
-  --ifm-color-primary-darker: #508134;
-  --ifm-color-primary-darkest: #426a2b;
-  --ifm-color-primary-light: #67a743;
-  --ifm-color-primary-lighter: #6caf46;
-  --ifm-color-primary-lightest: #7dbc59;
+  /* Primary Purple Palette */
+  --ifm-color-primary: #8b5cf6;
+  --ifm-color-primary-dark: #7c3aed;
+  --ifm-color-primary-darker: #6d28d9;
+  --ifm-color-primary-darkest: #5b21b6;
+  --ifm-color-primary-light: #a78bfa;
+  --ifm-color-primary-lighter: #c4b5fd;
+  --ifm-color-primary-lightest: #ddd6fe;
+
+  /* Secondary Purple Accent */
+  --hypertill-purple: #a855f7;
+  --hypertill-purple-dark: #9333ea;
+  --hypertill-purple-light: #c084fc;
+  --hypertill-purple-glow: rgba(168, 85, 247, 0.4);
+
+  /* Background Colors - Light Mode */
+  --ifm-background-color: #fafafa;
+  --ifm-background-surface-color: #ffffff;
+  --hypertill-bg-gradient-start: #f5f3ff;
+  --hypertill-bg-gradient-end: #faf5ff;
+
+  /* Navbar & Footer */
+  --ifm-navbar-background-color: rgba(255, 255, 255, 0.85);
+  --ifm-footer-background-color: #0f172a;
+
+  /* Typography */
+  --ifm-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ifm-heading-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ifm-heading-color: #0f172a;
+  --ifm-font-color-base: #334155;
+  --ifm-code-font-size: 90%;
+
+  /* Links */
+  --ifm-link-color: #8b5cf6;
+  --ifm-link-hover-color: #7c3aed;
+  --ifm-link-decoration: none;
+
+  /* Spacing & Radius */
+  --ifm-line-height-base: 1.7;
+  --ifm-global-radius: 12px;
+  --ifm-global-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --ifm-global-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  /* Custom Properties */
+  --hypertill-glass-bg: rgba(255, 255, 255, 0.7);
+  --hypertill-glass-border: rgba(255, 255, 255, 0.3);
+  --hypertill-card-bg: rgba(255, 255, 255, 0.8);
+  --hypertill-gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  --hypertill-gradient-purple: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+  --hypertill-gradient-mixed: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
+/* Dark Mode */
 [data-theme='dark'] {
-  --ifm-color-primary: #de4156;
-  --ifm-color-primary-dark: #da2940;
-  --ifm-color-primary-darker: #d0243b;
-  --ifm-color-primary-darkest: #ab1e31;
-  --ifm-color-primary-light: #e2596c;
-  --ifm-color-primary-lighter: #e46677;
-  --ifm-color-primary-lightest: #eb8a97;
+  --ifm-color-primary: #a78bfa;
+  --ifm-color-primary-dark: #8b5cf6;
+  --ifm-color-primary-darker: #7c3aed;
+  --ifm-color-primary-darkest: #6d28d9;
+  --ifm-color-primary-light: #c4b5fd;
+  --ifm-color-primary-lighter: #ddd6fe;
+  --ifm-color-primary-lightest: #ede9fe;
+
+  --hypertill-purple: #c084fc;
+  --hypertill-purple-dark: #a855f7;
+  --hypertill-purple-light: #e9d5ff;
+  --hypertill-purple-glow: rgba(192, 132, 252, 0.5);
+
+  /* Background Colors - Dark Mode */
+  --ifm-background-color: #0f0a1a;
+  --ifm-background-surface-color: #1a1033;
+  --hypertill-bg-gradient-start: #2d1b4e;
+  --hypertill-bg-gradient-end: #1a0b2e;
+
+  /* Navbar & Footer */
+  --ifm-navbar-background-color: rgba(15, 23, 42, 0.85);
+  --ifm-footer-background-color: #020617;
+
+  /* Typography */
+  --ifm-heading-color: #f8fafc;
+  --ifm-font-color-base: #cbd5e1;
+
+  /* Links */
+  --ifm-link-color: #34d399;
+  --ifm-link-hover-color: #6ee7b7;
+
+  /* Custom Properties */
+  --hypertill-glass-bg: rgba(30, 27, 75, 0.7);
+  --hypertill-glass-border: rgba(139, 92, 246, 0.2);
+  --hypertill-card-bg: rgba(26, 16, 51, 0.8);
 }
 
-/* 
-Use this tool to generate colors: https://docusaurus.io/docs/2.0.1/migration/manual#updated-fields
-*/
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* Base Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--ifm-background-color);
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Animated gradient background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(ellipse at 20% 20%, var(--hypertill-bg-gradient-start) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, var(--hypertill-bg-gradient-end) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, var(--hypertill-purple-glow) 0%, transparent 70%);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Navbar - Glassmorphism */
+.navbar {
+  border-bottom: 1px solid var(--hypertill-glass-border);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.navbar__brand {
+  font-weight: 700;
+}
+
+.navbar__title {
+  font-weight: 700;
+  background: var(--hypertill-gradient-mixed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.navbar__link {
+  font-weight: 500;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.navbar__link:hover {
+  color: var(--ifm-color-primary);
+}
+
+.navbar__link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--hypertill-gradient-primary);
+  transition: width 0.3s ease;
+}
+
+.navbar__link:hover::after {
+  width: 100%;
+}
+
+/* Footer */
+.footer {
+  border-top: 1px solid var(--hypertill-glass-border);
+  background: var(--ifm-footer-background-color);
+}
+
+.footer__title {
+  font-weight: 700;
+  color: var(--ifm-color-primary-light);
+}
+
+.footer__link-item {
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.footer__link-item:hover {
+  color: var(--ifm-color-primary-light);
+  text-decoration: none;
+}
+
+/* Typography */
+.theme-doc-markdown {
+  max-width: 56rem;
+}
+
+.theme-doc-markdown h1,
+.theme-doc-markdown h2,
+.theme-doc-markdown h3,
+.theme-doc-markdown h4,
+.footer__title {
+  font-family: var(--ifm-heading-font-family);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.theme-doc-markdown h1 {
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, var(--ifm-heading-color) 0%, var(--hypertill-purple) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme='dark'] .theme-doc-markdown h1 {
+  background: linear-gradient(135deg, #f8fafc 0%, var(--hypertill-purple-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.theme-doc-markdown h2 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--ifm-color-primary);
+  border-image: var(--hypertill-gradient-primary) 1;
+  border-image-slice: 0 0 2 0;
+}
+
+.theme-doc-markdown h3 {
+  font-size: 1.25rem;
+  margin-top: 2rem;
+  color: var(--ifm-color-primary);
+}
+
+.theme-doc-markdown p,
+.theme-doc-markdown li {
+  color: var(--ifm-font-color-base);
+  line-height: 1.8;
+}
+
+/* Inline Code */
+.theme-doc-markdown code {
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: rgba(139, 92, 246, 0.08);
+  border-radius: 6px;
+  padding: 0.2em 0.4em;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+  font-size: 0.85em;
+  transition: all 0.2s ease;
+}
+
+.theme-doc-markdown code:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.12);
+}
+
+/* Code Blocks */
+.theme-code-block {
+  border-radius: var(--ifm-global-radius);
+  box-shadow: var(--ifm-global-shadow-lg);
+  border: 1px solid var(--hypertill-glass-border);
+  overflow: hidden;
+}
+
+.theme-code-block pre {
+  background: var(--hypertill-card-bg) !important;
+}
+
+/* Cards & Tables of Contents */
+.pagination-nav__link,
+.table-of-contents,
+.menu {
+  border: 1px solid var(--hypertill-glass-border);
+  background: var(--hypertill-card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--ifm-global-radius);
+  box-shadow: var(--ifm-global-shadow-md);
+}
+
+/* Sidebar Menu */
+.menu {
+  padding: 1rem;
+}
+
+.menu__link {
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.menu__link:hover {
+  background: rgba(139, 92, 246, 0.08);
+  color: var(--ifm-color-primary);
+}
+
+.menu__link--active:not(.menu__link--sublist) {
+  background: var(--hypertill-gradient-primary);
+  color: white;
+  font-weight: 600;
+}
+
+.menu__link--active:not(.menu__link--sublist):hover {
+  background: var(--hypertill-gradient-primary);
+  color: white;
+}
+
+/* Table of Contents */
+.table-of-contents {
+  padding: 1rem;
+}
+
+.table-of-contents__link {
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  transition: all 0.2s ease;
+}
+
+.table-of-contents__link:hover {
+  background: rgba(139, 92, 246, 0.08);
+  color: var(--ifm-color-primary);
+}
+
+.table-of-contents__link--active {
+  background: var(--hypertill-gradient-primary);
+  color: white;
+  font-weight: 600;
+}
+
+/* Buttons */
+.button {
+  font-weight: 600;
+  border-radius: var(--ifm-global-radius);
+  transition: all 0.3s ease;
+  box-shadow: var(--ifm-global-shadow-md);
+}
+
+.button--primary {
+  background: var(--hypertill-gradient-primary);
+  border: none;
+}
+
+.button--primary:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.4);
+}
+
+.button--secondary {
+  background: var(--hypertill-card-bg);
+  border: 1px solid var(--hypertill-glass-border);
+  color: var(--ifm-font-color-base);
+}
+
+.button--secondary:hover {
+  background: var(--ifm-background-surface-color);
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+  transform: translateY(-2px);
+}
+
+/* Admonitions/Callouts */
+.alert {
+  border-radius: var(--ifm-global-radius);
+  border: 1px solid var(--hypertill-glass-border);
+  background: var(--hypertill-card-bg);
+  backdrop-filter: blur(8px);
+}
+
+.alert--primary {
+  border-left: 4px solid var(--ifm-color-primary);
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.alert--secondary {
+  border-left: 4px solid var(--hypertill-purple);
+  background: rgba(139, 92, 246, 0.05);
+}
+
+/* Pagination */
+.pagination-nav__link {
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.pagination-nav__link:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ifm-global-shadow-lg);
+  border-color: var(--ifm-color-primary);
+}
+
+/* Tags/Badges */
+.badge {
+  border-radius: 20px;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+}
+
+.badge--primary {
+  background: var(--hypertill-gradient-primary);
+}
+
+.badge--secondary {
+  background: var(--hypertill-gradient-purple);
+}
+
+/* Doc Item - Version Badge */
+.theme-doc-version-badge {
+  background: var(--hypertill-gradient-purple);
+  color: white;
+  font-weight: 600;
+}
+
+/* Search */
+.searchBox_node_modules-\@docusaurus-theme-classic-lib-theme-Navbar-Search-styles-module {
+  border-radius: var(--ifm-global-radius);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ifm-color-primary-dark);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ifm-color-primary);
+}
+
+/* Selection */
+::selection {
+  background: rgba(139, 92, 246, 0.3);
+  color: inherit;
+}
+
+/* Links in content */
+.markdown a {
+  font-weight: 500;
+  border-bottom: 1px dashed var(--ifm-color-primary);
+  transition: all 0.2s ease;
+}
+
+.markdown a:hover {
+  border-bottom-style: solid;
+  text-decoration: none;
+}
+
+/* Tables */
+table {
+  border-radius: var(--ifm-global-radius);
+  overflow: hidden;
+  box-shadow: var(--ifm-global-shadow-md);
+  border: 1px solid var(--hypertill-glass-border);
+}
+
+table thead {
+  background: var(--hypertill-gradient-primary);
+  color: white;
+}
+
+table thead tr {
+  border-bottom: none;
+}
+
+table th {
+  font-weight: 600;
+}
+
+table tr:nth-child(2n) {
+  background: rgba(139, 92, 246, 0.03);
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 4px solid var(--hypertill-purple);
+  background: var(--hypertill-card-bg);
+  border-radius: 0 var(--ifm-global-radius) var(--ifm-global-radius) 0;
+  padding: 1rem 1.5rem;
+}
+
+/* Announcement Bar */
+div[class*='announcementBar'] {
+  background: var(--hypertill-gradient-mixed) !important;
+  color: white;
+  font-weight: 600;
+}
+
+/* Breadcrumbs */
+.breadcrumbs__item {
+  font-weight: 500;
+}
+
+.breadcrumbs__link {
+  color: var(--ifm-font-color-base);
+  transition: color 0.2s ease;
+}
+
+.breadcrumbs__link:hover {
+  color: var(--ifm-color-primary);
+}

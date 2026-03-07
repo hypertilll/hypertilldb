@@ -2,26 +2,26 @@
 // Note: type annotations allow type checking and IDEs autocompletion
 
 const { themes } = require('prism-react-renderer')
-const lightTheme = themes.github
-const darkTheme = themes.dracula
+const lightTheme = themes.oneLight
+const darkTheme = themes.oneDark
 const { version } = require('./package.json')
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Hypertill DB',
-  tagline: 'A reactive database framework',
+  tagline: 'Reactive local-first database for React, React Native, Expo, and web apps',
   favicon: 'img/favicon.png',
 
   // Set the production url of your site here
-  url: 'https://github.com/helapoint/hypertill-db',
+  url: 'https://hypertilll.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  baseUrl: '/hypertillDB/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'helapoint',
-  projectName: 'hypertill-db',
+  organizationName: 'hypertilll',
+  projectName: 'hypertillDB',
 
   trailingSlash: false,
 
@@ -82,17 +82,34 @@ const config = {
           {
             type: 'doc',
             position: 'left',
-            label: 'Docs',
+            label: 'Start Here',
             docId: 'docs/README',
           },
           {
-            type: 'docsVersionDropdown',
+            type: 'doc',
             position: 'left',
+            label: 'Install',
+            docId: 'docs/Installation',
           },
-          // {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://github.com/helapoint/hypertill-db',
-            label: 'Repository',
+            type: 'doc',
+            position: 'left',
+            label: 'React',
+            docId: 'docs/Components',
+          },
+          {
+            href: 'https://github.com/hypertilll/expo-hypertillDB-example',
+            label: 'Expo Demo',
+            position: 'right',
+          },
+          {
+            href: 'https://www.npmjs.com/package/@hypertill/db',
+            label: 'npm',
+            position: 'right',
+          },
+          {
+            href: 'https://github.com/hypertilll/hypertillDB',
+            label: 'GitHub',
             position: 'right',
           },
         ],
@@ -104,16 +121,33 @@ const config = {
             title: 'Docs',
             items: [
               {
+                label: 'Start Here',
+                to: '/docs',
+              },
+              {
                 label: 'Installation',
                 to: '/docs/Installation',
               },
-              // {
-              //   label: 'Advanced Guides',
-              //   to: '/docs/Advanced/Migrations',
-              // },
               {
-                label: 'Contributing',
-                to: '/docs/CONTRIBUTING',
+                label: 'Setup',
+                to: '/docs/Setup',
+              },
+              {
+                label: 'React Components',
+                to: '/docs/Components',
+              },
+            ],
+          },
+          {
+            title: 'Package',
+            items: [
+              {
+                label: '@hypertill/db on npm',
+                href: 'https://www.npmjs.com/package/@hypertill/db',
+              },
+              {
+                label: 'Expo Demo Repo',
+                href: 'https://github.com/hypertilll/expo-hypertillDB-example',
               },
             ],
           },
@@ -121,25 +155,16 @@ const config = {
             title: 'Support',
             items: [
               {
+                label: 'Repository',
+                href: 'https://github.com/hypertilll/hypertillDB',
+              },
+              {
                 label: 'Website',
                 href: 'https://helapoint.com',
               },
               {
                 label: 'Contact',
                 href: 'mailto:contact@helapoint.com',
-              },
-            ],
-          },
-          {
-            title: 'More',
-            items: [
-              // {
-              //   label: 'Blog',
-              //   to: '/blog',
-              // },
-              {
-                label: 'Repository',
-                href: 'https://github.com/helapoint/hypertill-db',
               },
             ],
           },
