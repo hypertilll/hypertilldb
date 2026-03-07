@@ -77,6 +77,7 @@ const config = {
         logo: {
           alt: 'Hypertill DB Logo',
           src: 'img/logo.svg',
+          srcDark: 'img/logo-dark.svg',
         },
         items: [
           {
