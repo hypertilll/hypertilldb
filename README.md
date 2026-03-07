@@ -13,10 +13,10 @@ Hypertill DB is the published HelaPoint-maintained fork of WatermelonDB. It keep
 
 ## Start here
 
-1. Read the docs site: [Hypertill DB documentation](https://hypertilll.github.io/hypertillDB/docs)
-2. Install the package: [Installation guide](https://hypertilll.github.io/hypertillDB/docs/Installation)
-3. Set up schema and models: [Setup guide](https://hypertilll.github.io/hypertillDB/docs/Setup)
-4. Connect React screens: [Connecting Components](https://hypertilll.github.io/hypertillDB/docs/Components)
+1. Read the docs site: [Hypertill DB documentation](https://db.hypertill.com/docs)
+2. Install the package: [Installation guide](https://db.hypertill.com/docs/Installation)
+3. Set up schema and models: [Setup guide](https://db.hypertill.com/docs/Setup)
+4. Connect React screens: [Connecting Components](https://db.hypertill.com/docs/Components)
 5. Review the working mobile reference: [expo-hypertillDB-example](https://github.com/hypertilll/expo-hypertillDB-example)
 
 ## Current React guidance in 0.0.1
