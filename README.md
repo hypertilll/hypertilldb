@@ -4,6 +4,7 @@ Hypertill DB is the published HelaPoint-maintained fork of WatermelonDB. It keep
 
 ## What 0.0.1 already gives you
 
+- The live docs site: [https://db.hypertill.com/](https://db.hypertill.com/)
 - The npm package: [`@hypertill/db`](https://www.npmjs.com/package/@hypertill/db)
 - Expo SDK 54+ support through the built-in package plugin
 - React helpers: `DatabaseProvider`, `useDatabase`, and `withObservables`
@@ -13,7 +14,7 @@ Hypertill DB is the published HelaPoint-maintained fork of WatermelonDB. It keep
 
 ## Start here
 
-1. Read the docs site: [Hypertill DB documentation](https://db.hypertill.com/docs)
+1. Open the docs site: [https://db.hypertill.com/](https://db.hypertill.com/)
 2. Install the package: [Installation guide](https://db.hypertill.com/docs/Installation)
 3. Set up schema and models: [Setup guide](https://db.hypertill.com/docs/Setup)
 4. Connect React screens: [Connecting Components](https://db.hypertill.com/docs/Components)
