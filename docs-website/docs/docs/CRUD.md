@@ -4,12 +4,29 @@ When you have your [Schema](./Schema.md) and [Models](./Model.md) defined, learn
 
 ## Reading
 
+#### Reactive reads with hooks (recommended)
+
+```js
+import { hooks } from '@hypertill/db/react'
+
+const { data: books, loading } = hooks.useBooks({
+  search: 'deep',
+  sort: 'updated_desc',
+})
+
+const { data: book } = hooks.useBook(bookId)
+
+const { data: chapters } = hooks.useChaptersAdvanced({
+  q: (Q) => [Q.where('book_id', bookId), Q.sortBy('position', Q.asc)],
+})
+```
+
 #### Get a collection
 
 The `Collection` object is how you find, query, and create new records of a given type.
 
 ```js
-const postsCollection = database.get('posts')
+const booksCollection = database.get('books')
 ```
 
 Pass the [table name](./Schema.md) as the argument.
@@ -17,8 +34,8 @@ Pass the [table name](./Schema.md) as the argument.
 #### Find a record (by ID)
 
 ```js
-const postId = 'abcdefgh'
-const post = await database.get('posts').find(postId)
+const bookId = 'abcdefgh'
+const book = await database.get('books').find(bookId)
 ```
 
 `find()` returns a Promise. If the record cannot be found, the Promise will be rejected.
@@ -28,9 +45,9 @@ const post = await database.get('posts').find(postId)
 Find a list of records matching given conditions by making a Query and then fetching it:
 
 ```js
-const allPosts = await database.get('posts').query().fetch()
-const numberOfStarredPosts = await database.get('posts').query(
-  Q.where('is_starred', true)
+const allBooks = await database.get('books').query().fetch()
+const numberOfFavoriteBooks = await database.get('books').query(
+  Q.where('is_favorite', true)
 ).fetchCount()
 ```
 
@@ -42,9 +59,9 @@ All modifications to the database (like creating, updating, deleting records) mu
 
 ```js
 await database.write(async () => {
-  const someComment = await database.get('comments').find(commentId)
-  await someComment.update((comment) => {
-    comment.isSpam = true
+  const someChapter = await database.get('chapters').find(chapterId)
+  await someChapter.update((chapter) => {
+    chapter.isSpam = true
   })
 })
 ```
@@ -54,11 +71,11 @@ Or by defining a `@writer` method on a Model:
 ```js
 import { writer } from '@hypertill/db/decorators'
 
-class Comment extends Model {
+class Chapter extends Model {
   // (...)
   @writer async markAsSpam() {
-    await this.update(comment => {
-      comment.isSpam = true
+    await this.update(chapter => {
+      chapter.isSpam = true
     })
   }
 }
@@ -69,13 +86,13 @@ class Comment extends Model {
 ### Create a new record
 
 ```js
-const newPost = await database.get('posts').create(post => {
-  post.title = 'New post'
-  post.body = 'Lorem ipsum...'
+const newBook = await database.get('books').create(book => {
+  book.title = 'New book'
+  book.author = 'Unknown'
 })
 ```
 
-`.create()` takes a "builder function". In the example above, the builder will get a `Post` object as an argument. Use this object to set values for [fields you defined](./Model.md).
+`.create()` takes a "builder function". In the example above, the builder will get a `Book` object as an argument. Use this object to set values for [fields you defined](./Model.md).
 
 **Note:** Always `await` the Promise returned by `create` before you access the created record.
 
@@ -84,8 +101,8 @@ const newPost = await database.get('posts').create(post => {
 ### Update a record
 
 ```js
-await somePost.update(post => {
-  post.title = 'Updated title'
+await someBook.update(book => {
+  book.title = 'Updated title'
 })
 ```
 
@@ -100,8 +117,8 @@ There are two ways of deleting records: syncable (mark as deleted), and permanen
 If you only use Hypertill as a local database, destroy records permanently, if you [synchronize](./Sync/Intro.md), mark as deleted instead.
 
 ```js
-await somePost.markAsDeleted() // syncable
-await somePost.destroyPermanently() // permanent
+await someBook.markAsDeleted() // syncable
+await someBook.destroyPermanently() // permanent
 ```
 
 **Note:** Do not access, update, or observe records after they're deleted.
@@ -116,8 +133,8 @@ await somePost.destroyPermanently() // permanent
 - `Database.unsafeResetDatabase()` destroys the whole database - [be sure to see this comment before using it](https://github.com/helapoint/hypertill-db/blob/22188ee5b6e3af08e48e8af52d14e0d90db72925/src/Database/index.js#L131)
 - To override the `record.id` during the creation, e.g. to sync with a remote database, you can do it by `record._raw` property. Be aware that the `id` must be of type `string`.
     ```js
-    await database.get('posts').create(post => {
-      post._raw.id = serverId
+    await database.get('books').create(book => {
+      book._raw.id = serverId
     })
     ```
 
@@ -153,4 +170,3 @@ await database.write(() => {
 ## Next steps
 
 ➡️ Now that you can create and update records, [**connect them to React components**](./Components.md)
-

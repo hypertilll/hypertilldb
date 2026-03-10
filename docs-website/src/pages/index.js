@@ -17,7 +17,7 @@ const features = [
   {
     label: 'Reactive UI',
     title: 'Use the current React surface without inventing your own database runtime.',
-    text: 'DatabaseProvider, useDatabase, and withObservables are the supported building blocks in 0.0.1.',
+    text: 'DatabaseProvider, useDatabase, and auto-generated hooks are the supported building blocks in 0.0.3.',
   },
 ]
 
@@ -34,7 +34,7 @@ const gettingStarted = [
   },
   {
     title: 'Connect React',
-    text: 'Wire live reads with withObservables and use useDatabase for writes and app actions.',
+    text: 'Wire live reads with hooks and use useDatabase for writes and app actions.',
     to: '/docs/Components',
   },
   {
@@ -71,7 +71,7 @@ export default function Home() {
               </div>
 
               <div className={styles.metaRow}>
-                <span>Version 0.0.1</span>
+                <span>Version 0.0.3</span>
                 <span>Expo SDK 54+ plugin included</span>
                 <span>Android and iOS native builds</span>
               </div>
@@ -82,8 +82,6 @@ export default function Home() {
                 <div className={styles.railLabel}>Install path</div>
                 <pre className={styles.codeBlock}>
                   <code>{`npm install @hypertill/db expo-dev-client
-npm install -D @babel/plugin-proposal-decorators
-
 npx expo run:android
 npx expo run:ios`}</code>
                 </pre>
@@ -92,7 +90,7 @@ npx expo run:ios`}</code>
               <div className={styles.railCard}>
                 <div className={styles.railLabel}>Current package reality</div>
                 <ul className={styles.list}>
-                  <li>Reactive reads today use withObservables.</li>
+                  <li>Reactive reads use hooks (auto-generated per model).</li>
                   <li>Writes and imperative access use useDatabase.</li>
                   <li>The TypeScript Expo demo is the fastest reference.</li>
                 </ul>

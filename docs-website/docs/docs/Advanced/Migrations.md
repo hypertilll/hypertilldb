@@ -11,7 +11,7 @@ Without migrations, if a user of your app upgrades from one version to another, 
 1. Add a new file for migrations:
 
    ```js
-   // app/model/migrations.js
+   // db/migrations.ts
 
    import { schemaMigrations } from '@hypertill/db/Schema/migrations'
 
@@ -25,8 +25,8 @@ Without migrations, if a user of your app upgrades from one version to another, 
 2. Hook up migrations to the Database adapter setup:
 
    ```js
-   // index.js
-   import migrations from 'model/migrations'
+   // db/database.ts
+   import migrations from './migrations'
 
    const adapter = new SQLiteAdapter({
      schema: mySchema,
@@ -45,7 +45,7 @@ First, define the migration - that is, define the **change** that occurs between
 Don't change the schema file yet!
 
 ```js
-// app/model/migrations.js
+// db/migrations.ts
 
 import { schemaMigrations, createTable } from '@hypertill/db/Schema/migrations'
 
@@ -57,10 +57,12 @@ export default schemaMigrations({
       steps: [
         // See "Migrations API" for more details
         createTable({
-          name: 'comments',
+          name: 'chapters',
           columns: [
-            { name: 'post_id', type: 'string', isIndexed: true },
-            { name: 'body', type: 'string' },
+            { name: 'book_id', type: 'string', isIndexed: true },
+            { name: 'title', type: 'string' },
+            { name: 'position', type: 'number' },
+            { name: 'updated_at', type: 'number' },
           ],
         }),
       ],
@@ -86,17 +88,19 @@ Now it's time to make the actual changes to the schema file — add the same tab
 ⚠️ Don't change the schema version yet
 
 ```js
-// model/schema.js
+// db/schema.ts
 
 export default appSchema({
   version: 1,
   tables: [
     // This is our new table!
     tableSchema({
-      name: 'comments',
+      name: 'chapters',
       columns: [
-        { name: 'post_id', type: 'string', isIndexed: true },
-        { name: 'body', type: 'string' },
+        { name: 'book_id', type: 'string', isIndexed: true },
+        { name: 'title', type: 'string' },
+        { name: 'position', type: 'number' },
+        { name: 'updated_at', type: 'number' },
       ],
     }),
     // ...
@@ -111,7 +115,7 @@ Refresh the simulator. You should again see the same "Migrations can't be newer 
 Now that we made matching changes in the schema (source of truth about tables and columns) and migrations (the change in tables and columns), it's time to commit the change by bumping the version:
 
 ```js
-// model/schema.js
+// db/schema.ts
 
 export default appSchema({
   version: 2,
@@ -145,17 +149,19 @@ schemaMigrations({
       toVersion: 3,
       steps: [
         createTable({
-          name: 'comments',
+          name: 'chapters',
           columns: [
-            { name: 'post_id', type: 'string', isIndexed: true },
-            { name: 'body', type: 'string' },
+            { name: 'book_id', type: 'string', isIndexed: true },
+            { name: 'title', type: 'string' },
+            { name: 'position', type: 'number' },
+            { name: 'updated_at', type: 'number' },
           ],
         }),
         addColumns({
-          table: 'posts',
+          table: 'books',
           columns: [
             { name: 'subtitle', type: 'string', isOptional: true },
-            { name: 'is_pinned', type: 'boolean' },
+            { name: 'is_favorite', type: 'boolean' },
           ],
         }),
       ],
@@ -187,8 +193,8 @@ schemaMigrations({
 
 There's no automatic "rollback" feature in Hypertill. If you make a mistake in migrations during development, roll back in this order:
 
-1. Comment out any changes made to schema.js
-2. Comment out any changes made to migrations.js
+1. Comment out any changes made to `db/schema.ts`
+2. Comment out any changes made to `db/migrations.ts`
 3. Decrement schema version number (bring back the original number)
 
 After refreshing app, the database should reset to previous state. Now you can correct your mistake and apply changes again (please do it in order described in "Migrations workflow").

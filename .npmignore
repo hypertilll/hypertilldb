@@ -1,0 +1,32 @@
+# Repo/Docs
+docs-website/
+assets/
+examples/
+docs/
+blog/
+build/
+
+# Tooling and CI
+.github/
+.circleci/
+.vscode/
+
+# Tests and local scripts
+**/__tests__/
+**/*.test.js
+**/*.spec.js
+**/*.test.ts
+**/*.spec.ts
+scripts/
+
+# Dev environment
+node_modules/
+tmp/
+.tmp/
+dist/.cache/
+.cache/
+.DS_Store
+
+# Local artifacts
+*.tgz
+*.log

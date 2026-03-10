@@ -3,6 +3,58 @@ import { mockDatabase } from '../__tests__/testModels'
 import { noop } from '../utils/fp'
 import { logger } from '../utils/common'
 import * as Q from '../QueryDescription'
+import Database from './index'
+import LokiJSAdapter from '../adapters/lokijs'
+import Model from '../Model'
+import { appSchema, tableSchema } from '../Schema'
+import { field, date, readonly } from '../decorators'
+
+const softDeleteSchema = appSchema({
+  version: 1,
+  tables: [
+    tableSchema({
+      name: 'mock_soft_deleted',
+      columns: [
+        { name: 'name', type: 'string' },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+        { name: 'deleted_at', type: 'number', isOptional: true },
+        { name: 'created_tz', type: 'string', isOptional: true },
+        { name: 'updated_tz', type: 'string', isOptional: true },
+        { name: 'deleted_tz', type: 'string', isOptional: true },
+      ],
+    }),
+  ],
+})
+
+class MockSoftDeleted extends Model {
+  static table = 'mock_soft_deleted'
+
+  @field('name')
+  name
+
+  @readonly
+  @date('created_at')
+  createdAt
+
+  @readonly
+  @date('updated_at')
+  updatedAt
+}
+
+const makeSoftDeleteDatabase = () => {
+  const adapter = new LokiJSAdapter({
+    dbName: `test-soft-delete-${Math.random()}`,
+    schema: softDeleteSchema,
+    useWebWorker: false,
+    useIncrementalIndexedDB: false,
+  })
+
+  return new Database({
+    adapter,
+    modelClasses: [MockSoftDeleted],
+  })
+}
 
 describe('Database', () => {
   it(`implements get()`, () => {
@@ -151,6 +203,21 @@ describe('Database', () => {
   })
 
   describe('Database.batch()', () => {
+    it('uses update operation for markAsDeleted when deleted_at/deleted_tz columns exist', async () => {
+      const database = makeSoftDeleteDatabase()
+      const adapterBatchSpy = jest.spyOn(database.adapter, 'batch')
+
+      await database.write(async () => {
+        const record = await database.get('mock_soft_deleted').create((model) => {
+          model.name = 'to delete'
+        })
+        await database.batch(record.prepareMarkAsDeleted())
+      })
+
+      expect(adapterBatchSpy).toHaveBeenLastCalledWith([
+        ['update', 'mock_soft_deleted', expect.objectContaining({ _status: 'deleted' })],
+      ])
+    })
     it('can batch records', async () => {
       let {
         database,
