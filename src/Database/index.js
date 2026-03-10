@@ -23,9 +23,118 @@ import WorkQueue, { type ReaderInterface, type WriterInterface } from './WorkQue
 type DatabaseProps = $Exact<{
   adapter: DatabaseAdapter,
   modelClasses: Array<Class<Model>>,
+  recordIds?: $Exact<{
+    strategy?: 'uuidv4' | 'uuidv7',
+  }>,
+  timestamps?: $Exact<{
+    mode?: 'epoch' | 'epoch+timezone',
+    timezoneSource?: 'device' | 'utc' | string,
+  }>,
 }>
 
 let experimentalAllowsFatalError = false
+
+type RecordIdStrategy = 'uuidv4' | 'uuidv7'
+type TimestampMode = 'epoch' | 'epoch+timezone'
+type TimezoneSource = 'device' | 'utc' | string
+
+const BYTE_TO_HEX = Array(256)
+for (let i = 0; i < 256; i += 1) {
+  BYTE_TO_HEX[i] = i.toString(16).padStart(2, '0')
+}
+
+function getCrypto(): any {
+  // eslint-disable-next-line no-undef
+  if (typeof globalThis !== 'undefined' && globalThis.crypto) {
+    // eslint-disable-next-line no-undef
+    return globalThis.crypto
+  }
+
+  return null
+}
+
+function fillRandomBytes(bytes: Uint8Array): void {
+  const crypto = getCrypto()
+  if (crypto && typeof crypto.getRandomValues === 'function') {
+    crypto.getRandomValues(bytes)
+    return
+  }
+
+  for (let i = 0; i < bytes.length; i += 1) {
+    bytes[i] = Math.floor(Math.random() * 256)
+  }
+}
+
+function toUuid(bytes: Uint8Array): string {
+  return (
+    BYTE_TO_HEX[bytes[0]] +
+    BYTE_TO_HEX[bytes[1]] +
+    BYTE_TO_HEX[bytes[2]] +
+    BYTE_TO_HEX[bytes[3]] +
+    '-' +
+    BYTE_TO_HEX[bytes[4]] +
+    BYTE_TO_HEX[bytes[5]] +
+    '-' +
+    BYTE_TO_HEX[bytes[6]] +
+    BYTE_TO_HEX[bytes[7]] +
+    '-' +
+    BYTE_TO_HEX[bytes[8]] +
+    BYTE_TO_HEX[bytes[9]] +
+    '-' +
+    BYTE_TO_HEX[bytes[10]] +
+    BYTE_TO_HEX[bytes[11]] +
+    BYTE_TO_HEX[bytes[12]] +
+    BYTE_TO_HEX[bytes[13]] +
+    BYTE_TO_HEX[bytes[14]] +
+    BYTE_TO_HEX[bytes[15]]
+  )
+}
+
+function generateUuidV4(): string {
+  const bytes = new Uint8Array(16)
+  fillRandomBytes(bytes)
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  return toUuid(bytes)
+}
+
+function generateUuidV7(): string {
+  const bytes = new Uint8Array(16)
+  fillRandomBytes(bytes)
+
+  const timestamp = Date.now()
+  bytes[0] = Math.floor(timestamp / 1099511627776) & 0xff // 2^40
+  bytes[1] = Math.floor(timestamp / 4294967296) & 0xff // 2^32
+  bytes[2] = Math.floor(timestamp / 16777216) & 0xff // 2^24
+  bytes[3] = Math.floor(timestamp / 65536) & 0xff // 2^16
+  bytes[4] = Math.floor(timestamp / 256) & 0xff // 2^8
+  bytes[5] = timestamp & 0xff
+
+  bytes[6] = (bytes[6] & 0x0f) | 0x70
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  return toUuid(bytes)
+}
+
+function createRecordIdGenerator(strategy: RecordIdStrategy): () => string {
+  return strategy === 'uuidv7' ? generateUuidV7 : generateUuidV4
+}
+
+function resolveTimezone(source: TimezoneSource): string {
+  if (source === 'utc') {
+    return 'UTC'
+  }
+
+  if (source && source !== 'device') {
+    return source
+  }
+
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    return timezone || 'UTC'
+  } catch (_error) {
+    return 'UTC'
+  }
+}
 
 export function setExperimentalAllowsFatalError(): void {
   experimentalAllowsFatalError = true
@@ -45,6 +154,8 @@ export default class Database {
 
   collections: CollectionMap
 
+  modelClasses: Class<Model>[]
+
   _workQueue: WorkQueue = new WorkQueue(this)
 
   // (experimental) if true, Database is in a broken state and should not be used anymore
@@ -52,18 +163,47 @@ export default class Database {
 
   _localStorage: LocalStorage
 
+  _recordIdStrategy: RecordIdStrategy = 'uuidv4'
+
+  _recordIdGenerator: () => string = createRecordIdGenerator('uuidv4')
+
+  _timestampsConfig: {| mode: TimestampMode, timezoneSource: TimezoneSource |} = {
+    mode: 'epoch+timezone',
+    timezoneSource: 'device',
+  }
+
   constructor(options: DatabaseProps): void {
-    const { adapter, modelClasses } = options
+    const { adapter, modelClasses, recordIds = {}, timestamps = {} } = options
     if (process.env.NODE_ENV !== 'production') {
       invariant(adapter, `Missing adapter parameter for new Database()`)
       invariant(
         modelClasses && Array.isArray(modelClasses),
         `Missing modelClasses parameter for new Database()`,
       )
+      invariant(
+        !recordIds.strategy || ['uuidv4', 'uuidv7'].includes(recordIds.strategy),
+        `Invalid recordIds.strategy '${String(recordIds.strategy)}'. Valid values: uuidv4, uuidv7`,
+      )
+      invariant(
+        !timestamps.mode || ['epoch', 'epoch+timezone'].includes(timestamps.mode),
+        `Invalid timestamps.mode '${String(
+          timestamps.mode,
+        )}'. Valid values: epoch, epoch+timezone`,
+      )
     }
+
+    this._recordIdStrategy = recordIds.strategy || 'uuidv4'
+    this._recordIdGenerator = createRecordIdGenerator(this._recordIdStrategy)
+    this._timestampsConfig = {
+      mode: timestamps.mode || 'epoch+timezone',
+      timezoneSource: timestamps.timezoneSource || 'device',
+    }
+
     this.adapter = new DatabaseAdapterCompat(adapter)
     this.schema = adapter.schema
     this.collections = new CollectionMap(this, modelClasses)
+    // Expose model classes for auto-hook generation in react layer
+    this.modelClasses = modelClasses
   }
 
   /**
@@ -82,6 +222,21 @@ export default class Database {
       this._localStorage = new LocalStorageClass(this)
     }
     return this._localStorage
+  }
+
+  _generateRecordId(): string {
+    return this._recordIdGenerator()
+  }
+
+  _nextTimestamp(): {| epochMs: number, timezone: string |} {
+    return {
+      epochMs: Date.now(),
+      timezone: resolveTimezone(this._timestampsConfig.timezoneSource),
+    }
+  }
+
+  _timestampsMode(): TimestampMode {
+    return this._timestampsConfig.mode
   }
 
   /*:: batch: ArrayOrSpreadFn<?Model | false, Promise<void>>  */
@@ -131,7 +286,12 @@ export default class Database {
         batchOperations.push(['create', table, raw])
         changeType = 'created'
       } else if (preparedState === 'markAsDeleted') {
-        batchOperations.push(['markAsDeleted', table, id])
+        const tableSchema = this.schema.tables[table]
+        if (tableSchema && (tableSchema.columns.deleted_at || tableSchema.columns.deleted_tz)) {
+          batchOperations.push(['update', table, raw])
+        } else {
+          batchOperations.push(['markAsDeleted', table, id])
+        }
         changeType = 'destroyed'
       } else if (preparedState === 'destroyPermanently') {
         batchOperations.push(['destroyPermanently', table, id])

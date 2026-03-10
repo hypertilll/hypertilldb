@@ -135,7 +135,7 @@ const initializeJSI = () => {
   }
 
   const bridge = WMDatabaseBridge
-  if (bridge.initializeJSI) {
+  if (bridge && bridge.initializeJSI) {
     try {
       bridge.initializeJSI()
       return !!global.nativeHypertillCreateAdapter

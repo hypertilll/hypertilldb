@@ -112,6 +112,13 @@ export default class Model {
 
   get table(): TableName<this>
 
+  get timestampMeta(): {
+    deletedAt: number | null
+    createdTz: string | null
+    updatedTz: string | null
+    deletedTz: string | null
+  }
+
   // FIX_TS
   // Don't use this directly! Use `collection.create()`
   constructor(collection: Collection<Model>, raw: RawRecord)

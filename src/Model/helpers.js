@@ -5,21 +5,48 @@ import { allPromises, unnest } from '../utils/fp'
 import * as Q from '../QueryDescription'
 import type Model from './index'
 import type Query from '../Query/index'
+import type Database from '../Database'
+import type { TableSchema } from '../Schema'
 
-type TimestampsObj = $Exact<{ created_at?: number, updated_at?: number }>
-export const createTimestampsFor = (model: Model): TimestampsObj => {
-  const date = Date.now()
+type TimestampsObj = $Exact<{
+  created_at?: number,
+  updated_at?: number,
+  deleted_at?: ?number,
+  created_tz?: string,
+  updated_tz?: string,
+  deleted_tz?: ?string,
+}>
+export const createTimestampsFor = (database: Database, tableSchema: TableSchema): TimestampsObj => {
+  const { epochMs, timezone } = database._nextTimestamp()
   const timestamps: $Shape<TimestampsObj> = {}
+  const columns = tableSchema.columns
+  const includeTimezone = database._timestampsMode() === 'epoch+timezone'
 
-  if ('createdAt' in model) {
-    timestamps.created_at = date
+  if (columns.created_at) {
+    timestamps.created_at = epochMs
   }
 
-  if ('updatedAt' in model) {
-    timestamps.updated_at = date
+  if (columns.updated_at) {
+    timestamps.updated_at = epochMs
   }
 
-  return timestamps
+  if (columns.deleted_at) {
+    timestamps.deleted_at = null
+  }
+
+  if (includeTimezone && columns.created_tz) {
+    timestamps.created_tz = timezone
+  }
+
+  if (includeTimezone && columns.updated_tz) {
+    timestamps.updated_tz = timezone
+  }
+
+  if (includeTimezone && columns.deleted_tz) {
+    timestamps.deleted_tz = null
+  }
+
+  return (timestamps: any)
 }
 
 function getChildrenQueries(model: Model): Query<Model>[] {

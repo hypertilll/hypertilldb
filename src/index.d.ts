@@ -5,6 +5,7 @@ export { default as Database } from './Database'
 export { default as Relation } from './Relation'
 export { default as Model, associations } from './Model'
 export { default as Query } from './Query'
+export { default as createPlatformAdapter } from './adapters/auto'
 export { tableName, columnName, appSchema, tableSchema } from './Schema'
 
 export type { default as CollectionMap } from './Database/CollectionMap'

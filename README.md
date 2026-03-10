@@ -7,6 +7,7 @@ Hypertill DB is the published HelaPoint-maintained fork of WatermelonDB. It keep
 - The live docs site: [https://db.hypertill.com/](https://db.hypertill.com/)
 - The npm package: [`@hypertill/db`](https://www.npmjs.com/package/@hypertill/db)
 - Expo SDK 54+ support through the built-in package plugin
+- Expo plugin auto-patching for Babel decorators/class-field transforms
 - React helpers: `DatabaseProvider`, `useDatabase`, and `withObservables`
 - SQLite adapters for iOS, Android, and Node.js
 - LokiJS support for browser-based usage
@@ -26,6 +27,45 @@ Hypertill DB is the published HelaPoint-maintained fork of WatermelonDB. It keep
 - Use `withObservables` for reactive records, relations, lists, and counts.
 - Use `useDatabase` for writes, screen actions, and imperative lookups.
 - First-party query hooks are not part of `0.0.1`, so the package still favors observable composition for live reads.
+
+## Database defaults (IDs + timestamps)
+
+By default, `Database` now auto-configures:
+
+- Record IDs as UUIDv4 (Supabase-compatible format)
+- Timestamps in `epoch+timezone` mode (`created_at`, `updated_at`, `deleted_at`, plus `*_tz` when those columns exist)
+
+Use zero config:
+
+```ts
+const database = new Database({
+  adapter,
+  modelClasses,
+})
+```
+
+To remove platform adapter boilerplate (`database.web.ts` + `database.native.ts`), you can now use:
+
+```ts
+import { createPlatformAdapter } from '@hypertill/db'
+
+const adapter = createPlatformAdapter({ schema, dbName: 'app-db' })
+// web => LokiJSAdapter, native/node => SQLiteAdapter
+```
+
+Override only when needed:
+
+```ts
+const database = new Database({
+  adapter,
+  modelClasses,
+  recordIds: { strategy: 'uuidv7' }, // default: uuidv4
+  timestamps: {
+    mode: 'epoch+timezone', // or 'epoch'
+    timezoneSource: 'device', // or 'utc' or explicit IANA string
+  },
+})
+```
 
 ## Core package surface
 

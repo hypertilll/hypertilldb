@@ -130,9 +130,15 @@ export default class Model {
     this.__ensureNotDisposable(`Model.prepareUpdate()`)
     this._isEditing = true
 
-    // Touch updatedAt (if available)
-    if ('updatedAt' in this) {
-      this._setRaw(columnName('updated_at'), Date.now())
+    const schemaColumns = this.collection.schema.columns
+    const { epochMs, timezone } = this.db._nextTimestamp()
+    const includeTimezone = this.db._timestampsMode() === 'epoch+timezone'
+
+    if (schemaColumns.updated_at) {
+      this._setRaw(columnName('updated_at'), epochMs)
+    }
+    if (includeTimezone && schemaColumns.updated_tz) {
+      this._setRaw(columnName('updated_tz'), timezone)
     }
 
     // Perform updates
@@ -187,6 +193,20 @@ export default class Model {
       `Cannot mark a record with pending changes as deleted (${this.__debugName})`,
     )
     this.__ensureNotDisposable(`Model.prepareMarkAsDeleted()`)
+    const schemaColumns = this.collection.schema.columns
+    const includeTimezone = this.db._timestampsMode() === 'epoch+timezone'
+    if (schemaColumns.deleted_at || (includeTimezone && schemaColumns.deleted_tz)) {
+      const { epochMs, timezone } = this.db._nextTimestamp()
+      this._isEditing = true
+      if (schemaColumns.deleted_at) {
+        this._setRaw(columnName('deleted_at'), epochMs)
+      }
+      if (includeTimezone && schemaColumns.deleted_tz) {
+        this._setRaw(columnName('deleted_tz'), timezone)
+      }
+      this._isEditing = false
+    }
+
     this._raw._status = 'deleted'
     this._preparedState = 'markAsDeleted'
     this.__logVerbose('prepareMarkAsDeleted')
@@ -320,6 +340,24 @@ export default class Model {
     return this.constructor.table
   }
 
+  /**
+   * Timestamp metadata stored automatically when columns exist in schema.
+   */
+  get timestampMeta(): {|
+    deletedAt: ?number,
+    createdTz: ?string,
+    updatedTz: ?string,
+    deletedTz: ?string,
+  |} {
+    const columns = this.collection.schema.columns
+    return {
+      deletedAt: columns.deleted_at ? (this._getRaw(columnName('deleted_at')): any) : null,
+      createdTz: columns.created_tz ? (this._getRaw(columnName('created_tz')): any) : null,
+      updatedTz: columns.updated_tz ? (this._getRaw(columnName('updated_tz')): any) : null,
+      deletedTz: columns.deleted_tz ? (this._getRaw(columnName('deleted_tz')): any) : null,
+    }
+  }
+
   // TODO: protect batch,callWriter,... from being used outside a @reader/@writer
   /**
    * Convenience method that should ONLY be used by Model's `@writer`-decorated methods
@@ -363,7 +401,11 @@ export default class Model {
     const record = new this(
       collection,
       // sanitizedRaw sets id
-      sanitizedRaw(createTimestampsFor(this.prototype), collection.schema),
+      sanitizedRaw(
+        createTimestampsFor(collection.database, collection.schema),
+        collection.schema,
+        () => collection.database._generateRecordId(),
+      ),
     )
 
     record._preparedState = 'create'
@@ -380,7 +422,10 @@ export default class Model {
     collection: Collection<$FlowFixMe<this>>,
     dirtyRaw: DirtyRaw,
   ): this {
-    const record = new this(collection, sanitizedRaw(dirtyRaw, collection.schema))
+    const record = new this(
+      collection,
+      sanitizedRaw(dirtyRaw, collection.schema, () => collection.database._generateRecordId()),
+    )
     record._preparedState = 'create'
     record.__logVerbose('prepareCreateFromDirtyRaw')
     return record
@@ -390,7 +435,10 @@ export default class Model {
     collection: Collection<$FlowFixMe<this>>,
     dirtyRaw: DirtyRaw,
   ): this {
-    const record = new this(collection, sanitizedRaw(dirtyRaw, collection.schema))
+    const record = new this(
+      collection,
+      sanitizedRaw(dirtyRaw, collection.schema, () => collection.database._generateRecordId()),
+    )
     record._raw._status = 'disposable'
     record.__logVerbose('disposableFromDirtyRaw')
     return record

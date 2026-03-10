@@ -14,6 +14,9 @@ import { sanitizedRaw } from '../RawRecord'
 import Model from './index'
 import { fetchDescendants } from './helpers'
 
+const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+const UUID_V7_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+
 const mockSchema = appSchema({
   version: 1,
   tables: [
@@ -40,6 +43,18 @@ const mockSchema = appSchema({
       columns: [
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
+      ],
+    }),
+    tableSchema({
+      name: 'mock_timestamped',
+      columns: [
+        { name: 'name', type: 'string' },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
+        { name: 'deleted_at', type: 'number', isOptional: true },
+        { name: 'created_tz', type: 'string', isOptional: true },
+        { name: 'updated_tz', type: 'string', isOptional: true },
+        { name: 'deleted_tz', type: 'string', isOptional: true },
       ],
     }),
   ],
@@ -83,10 +98,44 @@ class MockModelCreatedUpdated extends Model {
   updatedAt
 }
 
-const makeDatabase = () =>
+class MockModelTimestamped extends Model {
+  static table = 'mock_timestamped'
+
+  @field('name')
+  name
+
+  @readonly
+  @date('created_at')
+  createdAt
+
+  @readonly
+  @date('updated_at')
+  updatedAt
+
+  @field('deleted_at')
+  deletedAt
+
+  @field('created_tz')
+  createdTz
+
+  @field('updated_tz')
+  updatedTz
+
+  @field('deleted_tz')
+  deletedTz
+}
+
+const makeDatabase = (options = {}) =>
   new Database({
     adapter: { schema: mockSchema },
-    modelClasses: [MockModel, MockModelCreated, MockModelUpdated, MockModelCreatedUpdated],
+    modelClasses: [
+      MockModel,
+      MockModelCreated,
+      MockModelUpdated,
+      MockModelCreatedUpdated,
+      MockModelTimestamped,
+    ],
+    ...options,
   })
 
 describe('Model', () => {
@@ -120,7 +169,7 @@ describe('CRUD', () => {
     expect(m1.collection).toBe(collection)
     expect(m1._isEditing).toBe(false)
     expect(m1._preparedState).toBe('create')
-    expect(m1.id.length).toBe(16)
+    expect(m1.id).toMatch(UUID_V4_REGEX)
     expect(m1.createdAt).toBe(undefined)
     expect(m1.updatedAt).toBe(undefined)
     expect(m1.name).toBe('Some name')
@@ -143,7 +192,7 @@ describe('CRUD', () => {
     expect(m1.collection).toBe(collection)
     expect(m1._isEditing).toBe(false)
     expect(m1._preparedState).toBe('create')
-    expect(m1.id.length).toBe(16)
+    expect(m1.id).toMatch(UUID_V4_REGEX)
     expect(m1.createdAt).toBe(undefined)
     expect(m1.updatedAt).toBe(undefined)
     expect(m1.name).toBe('Some name')
@@ -172,6 +221,13 @@ describe('CRUD', () => {
     const m2 = MockModel._prepareCreateFromDirtyRaw(collection, raw)
     expect(m2._raw).toEqual(raw)
     expect(m2._raw).not.toBe(raw)
+  })
+  it('_prepareCreate: uses uuidv7 if configured via Database recordIds strategy', () => {
+    const database = makeDatabase({ recordIds: { strategy: 'uuidv7' } })
+    const collection = database.get('mock')
+    const m1 = MockModel._prepareCreate(collection, noop)
+
+    expect(m1.id).toMatch(UUID_V7_REGEX)
   })
   it('can update a record', async () => {
     const db = makeDatabase()
@@ -510,6 +566,50 @@ describe('Automatic created_at/updated_at', () => {
 
       await m1.update()
       expect(+m1.updatedAt).toBeGreaterThan(updatedAt)
+    })
+  })
+  it('sets timezone columns automatically by default if schema has *_tz columns', () => {
+    const db = makeDatabase()
+    const m1 = MockModelTimestamped._prepareCreate(db.get('mock_timestamped'), noop)
+
+    expect(m1.createdAt).toBeInstanceOf(Date)
+    expect(m1.updatedAt).toBeInstanceOf(Date)
+    expect(m1.createdTz).toEqual(expect.any(String))
+    expect(m1.updatedTz).toBe(m1.createdTz)
+    expect(m1.deletedAt).toBe(null)
+    expect(m1.deletedTz).toBe(null)
+  })
+  it('respects timestamps.timezoneSource override', () => {
+    const db = makeDatabase({ timestamps: { timezoneSource: 'utc' } })
+    const m1 = MockModelTimestamped._prepareCreate(db.get('mock_timestamped'), noop)
+
+    expect(m1.createdTz).toBe('UTC')
+    expect(m1.updatedTz).toBe('UTC')
+  })
+  it('respects timestamps.mode=epoch by skipping timezone writes', () => {
+    const db = makeDatabase({ timestamps: { mode: 'epoch' } })
+    const m1 = MockModelTimestamped._prepareCreate(db.get('mock_timestamped'), noop)
+
+    expect(m1.createdTz).toBe(null)
+    expect(m1.updatedTz).toBe(null)
+    expect(m1.deletedTz).toBe(null)
+  })
+  it('tracks deleted_at/deleted_tz when marking as deleted', async () => {
+    const db = makeDatabase()
+    db.adapter.batch = jest.fn()
+    await db.write(async () => {
+      const m1 = await db.get('mock_timestamped').create((record) => {
+        record.name = 'timestamped'
+      })
+
+      expect(m1.deletedAt).toBe(null)
+      expect(m1.deletedTz).toBe(null)
+
+      await m1.markAsDeleted()
+
+      expect(m1.deletedAt).toEqual(expect.any(Number))
+      expect(m1.deletedTz).toEqual(expect.any(String))
+      expect(m1.syncStatus).toBe('deleted')
     })
   })
 })
