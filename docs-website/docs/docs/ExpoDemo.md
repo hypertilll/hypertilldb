@@ -13,12 +13,12 @@ The fastest way to understand how Hypertill DB works in a real mobile app is the
 - `Books` screen with create, edit, delete, and navigation actions
 - `Chapters` screen scoped to one book
 - `Notes` screen for both book notes and chapter notes
-- separate `src/db` files for schema, models, database bootstrap, queries, and actions
+- a dedicated `src/db` folder for schema, models, and database bootstrap
 - real `SQLiteAdapter` usage with `jsi: true`
 
 ## Why this repo matters
 
-The demo is not a toy mock. It is the current reference app for the package story around `0.0.1`:
+The demo is not a toy mock. It is the current reference app for the package story around `0.0.3`:
 
 - Expo app
 - TypeScript only
@@ -39,7 +39,8 @@ If you open the example repo, start with these files:
 
 The example reflects the same guidance as this docs site:
 
-- reactive reads use `withObservables`-friendly query patterns
+- reactive reads use `hooks` (auto-generated per model)
+- `withObservables` is still available for complex composition
 - screen actions use `useDatabase` and explicit writer functions
 - the database layer is kept in its own folder instead of leaking collection logic across UI files
 

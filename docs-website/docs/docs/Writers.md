@@ -17,19 +17,19 @@ Here is an inline writer, you can invoke it anywhere you have access to the `dat
 
 ```js
 // Note: function passed to `database.write()` MUST be asynchronous
-const newPost = await database.write(async => {
-  const post = await database.get('posts').create(post => {
-    post.title = 'New post'
-    post.body = 'Lorem ipsum...'
+const newBook = await database.write(async => {
+  const book = await database.get('books').create(book => {
+    book.title = 'New book'
+    book.author = 'Unknown'
   })
-  const comment = await database.get('comments').create(comment => {
-    comment.post.set(post)
-    comment.author.id = someUserId
-    comment.body = 'Great post!'
+  const chapter = await database.get('chapters').create(chapter => {
+    chapter.book.set(book)
+    chapter.title = 'Introduction'
+    chapter.position = 1
   })
 
   // Note: Value returned from the wrapped function will be returned to `database.write` caller
-  return post
+  return book
 })
 ```
 
@@ -40,16 +40,16 @@ Writer methods can be defined on `Model` subclasses by using the `@writer` decor
 ```js
 import { writer } from '@hypertill/db/decorators'
 
-class Post extends Model {
+class Book extends Model {
   // ...
 
-  @writer async addComment(body, author) {
-    const newComment = await this.collections.get('comments').create(comment => {
-      comment.post.set(this)
-      comment.author.set(author)
-      comment.body = body
+  @writer async addChapter(title, position) {
+    const newChapter = await this.collections.get('chapters').create(chapter => {
+      chapter.book.set(this)
+      chapter.title = title
+      chapter.position = position
     })
-    return newComment
+    return newChapter
   }
 }
 ```
@@ -63,26 +63,26 @@ Note that this is the same as defining a simple method that wraps all work in `d
 - Always mark actions as `async` and remember to `await` on `.create()` and `.update()`
 - You can use `this.collections` to access `Database.collections`
 
-**Another example**: updater action on `Comment`:
+**Another example**: updater action on `Chapter`:
 
 ```js
-class Comment extends Model {
+class Chapter extends Model {
   // ...
   @field('is_spam') isSpam
 
   @writer async markAsSpam() {
-    await this.update(comment => {
-      comment.isSpam = true
+    await this.update(chapter => {
+      chapter.isSpam = true
     })
   }
 }
 ```
 
-Now we can create a comment and immediately mark it as spam:
+Now we can create a chapter and immediately mark it as spam:
 
 ```js
-const comment = await post.addComment('Lorem ipsum', someUser)
-await comment.markAsSpam()
+const chapter = await book.addChapter('Lorem ipsum', 1)
+await chapter.markAsSpam()
 ```
 
 ## Batch updates
@@ -91,18 +91,19 @@ When you make multiple changes in a writer, it's best to **batch them**.
 
 Batching means that the app doesn't have to go back and forth with the database (sending one command, waiting for the response, then sending another), but instead sends multiple commands in one big batch. This is faster, safer, and can avoid subtle bugs in your app
 
-Take an action that changes a `Post` into spam:
+Take an action that changes a `Book` into spam:
 
 ```js
-class Post extends Model {
+class Book extends Model {
   // ...
   @writer async createSpam() {
-    await this.update(post => {
-      post.title = `7 ways to lose weight`
+    await this.update(book => {
+      book.title = `7 ways to lose weight`
     })
-    await this.collections.get('comments').create(comment => {
-      comment.post.set(this)
-      comment.body = "Don't forget to comment, like, and subscribe!"
+    await this.collections.get('chapters').create(chapter => {
+      chapter.book.set(this)
+      chapter.title = "Don't forget to subscribe"
+      chapter.position = 1
     })
   }
 }
@@ -111,16 +112,17 @@ class Post extends Model {
 Let's modify it to use batching:
 
 ```js
-class Post extends Model {
+class Book extends Model {
   // ...
   @writer async createSpam() {
     await this.batch(
-      this.prepareUpdate(post => {
-        post.title = `7 ways to lose weight`
+      this.prepareUpdate(book => {
+        book.title = `7 ways to lose weight`
       }),
-      this.collections.get('comments').prepareCreate(comment => {
-        comment.post.set(this)
-        comment.body = "Don't forget to comment, like, and subscribe!"
+      this.collections.get('chapters').prepareCreate(chapter => {
+        chapter.book.set(this)
+        chapter.title = "Don't forget to subscribe"
+        chapter.position = 1
       })
     )
   }
@@ -141,31 +143,31 @@ class Post extends Model {
 
 ## Delete action
 
-When you delete, say, a `Post`, you generally want all `Comment`s that belong to it to be deleted as well.
+When you delete, say, a `Book`, you generally want all `Chapter`s that belong to it to be deleted as well.
 
 To do this, override `markAsDeleted()` (or `destroyPermanently()` if you don't sync) to explicitly delete all children as well.
 
 ```js
-class Post extends Model {
-  static table = 'posts'
+class Book extends Model {
+  static table = 'books'
   static associations = {
-    comments: { type: 'has_many', foreignKey: 'post_id' },
+    chapters: { type: 'has_many', foreignKey: 'book_id' },
   }
 
-  @children('comments') comments
+  @children('chapters') chapters
 
   async markAsDeleted() {
-    await this.comments.destroyAllPermanently()
+    await this.chapters.destroyAllPermanently()
     await super.markAsDeleted()
   }
 }
 ```
 
-Then to actually delete the post:
+Then to actually delete the book:
 
 ```js
 database.write(async () => {
-  await post.markAsDeleted()
+  await book.markAsDeleted()
 })
 ```
 
@@ -181,7 +183,7 @@ Hypertill DB is highly asynchronous, which is a BIG challange in terms of achiev
 <details>
   <summary>Why are readers and writers necessary?</summary>
 
-  Consider a function `markCommentsAsSpam` that fetches a list of comments on a post, and then marks them all as spam. The two operations (fetching, and then updating) are asynchronous, and some other operation that modifies the database could run in between. And it could just happen to be a function that adds a new comment on this post. Even though the function completes *successfully*, it wasn't *actually* successful at its job.
+  Consider a function `markChaptersAsSpam` that fetches a list of chapters on a book, and then marks them all as spam. The two operations (fetching, and then updating) are asynchronous, and some other operation that modifies the database could run in between. And it could just happen to be a function that adds a new chapter on this book. Even though the function completes *successfully*, it wasn't *actually* successful at its job.
 
   This example is trivial. But others may be far more dangerous. If a function fetches a record to perform an update on, this very record could be deleted midway through, making the action fail (and potentially causing the app to crash, if not handled properly). Or a function could have invariants determining whether the user is allowed to perform an action, that would be invalidated during action's execution. Or, in a collaborative app where access permissions are represented by another object, parallel execution of different actions could cause those access relations to be left in an inconsistent state.
 
@@ -206,12 +208,12 @@ database.read(async () => {
 })
 
 // alternatively:
-class Blog extends Model {
+class Library extends Model {
   // ...
 
-  @reader async exportBlog() {
-    const posts = await this.posts.fetch()
-    const comments = await this.allComments.fetch()
+  @reader async exportLibrary() {
+    const books = await this.books.fetch()
+    const chapters = await this.allChapters.fetch()
     // ...
   }
 }
@@ -222,20 +224,20 @@ class Blog extends Model {
 If you try to call a Writer from another Writer, you'll notice that it won't work. This is because while a Writer is running, no other Writer can run simultaneously. To override this behavior, wrap the Writer call in `this.callWriter`:
 
 ```js
-class Comment extends Model {
+class Chapter extends Model {
   // ...
 
-  @writer async appendToPost() {
-    const post = await this.post.fetch()
-    // `appendToBody` is an `@writer` on `Post`, so we call callWriter to allow it
-    await this.callWriter(() => post.appendToBody(this.body))
+  @writer async appendToBook() {
+    const book = await this.book.fetch()
+    // `appendToNotes` is an `@writer` on `Book`, so we call callWriter to allow it
+    await this.callWriter(() => book.appendToNotes(this.body))
   }
 }
 
 // alternatively:
 database.write(async writer => {
-  const post = await database.get('posts').find('abcdef')
-  await writer.callWriter(() => post.appendToBody('Lorem ipsum...')) // appendToBody is a @writer
+  const book = await database.get('books').find('abcdef')
+  await writer.callWriter(() => book.appendToNotes('Lorem ipsum...')) // appendToNotes is a @writer
 })
 ```
 

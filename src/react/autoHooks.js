@@ -332,3 +332,10 @@ export const hooks: { [string]: any } = new Proxy(baseHooks, {
   },
 })
 
+// Expose selected internals for tests only
+export const _internal = {
+  buildSimpleClauses,
+  getRegistry,
+  normalizeFilters,
+  pluralize,
+}

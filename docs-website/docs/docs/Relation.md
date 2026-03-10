@@ -1,6 +1,6 @@
 # Relations
 
-A `Relation` object represents one record pointing to another — such as the author (`User`) of a `Comment`, or the `Post` the comment belongs to.
+A `Relation` object represents one record pointing to another — such as the `Book` a `Chapter` belongs to.
 
 ### Defining Relations
 
@@ -10,10 +10,10 @@ There's two steps to defining a relation:
 
    ```js
    tableSchema({
-     name: 'comments',
+     name: 'chapters',
      columns: [
        // ...
-       { name: 'author_id', type: 'string' },
+       { name: 'book_id', type: 'string' },
      ]
    }),
    ```
@@ -22,9 +22,9 @@ There's two steps to defining a relation:
    ```js
    import { relation } from '@hypertill/db/decorators'
 
-   class Comment extends Model {
+   class Chapter extends Model {
      // ...
-     @relation('users', 'author_id') author
+     @relation('books', 'book_id') book
    }
    ```
 
@@ -32,56 +32,58 @@ There's two steps to defining a relation:
 
 ### immutableRelation
 
-If you have a relation that cannot change (for example, a comment can't change its author), use `@immutableRelation` for extra protection and performance:
+If you have a relation that cannot change (for example, a chapter can't change its book), use `@immutableRelation` for extra protection and performance:
 
 ```js
 import { immutableRelation } from '@hypertill/db/decorators'
 
-class Comment extends Model {
+class Chapter extends Model {
   // ...
-  @immutableRelation('posts', 'post_id') post
-  @immutableRelation('users', 'author_id') author
+  @immutableRelation('books', 'book_id') book
+  @immutableRelation('libraries', 'library_id') library
 }
 ```
 
 ## Relation API
 
-In the example above, `comment.author` returns a `Relation` object.
+In the example above, `chapter.book` returns a `Relation` object.
 
-> Remember, Hypertill DB is a lazily-loaded database, so you don't get the related `User` record immediately, only when you explicitly fetch it
+> Remember, Hypertill DB is a lazily-loaded database, so you don't get the related `Book` record immediately, only when you explicitly fetch it
 
 ### Observing
 
-Most of the time, you [connect Relations to Components](./Components.md) by using `observe()` (the same [as with Queries](./Query.md)):
+Most of the time, you connect relations to React using hooks by reading the related id and then using the matching hook:
 
 ```js
-withObservables(['comment'], ({ comment }) => ({
-  comment,
-  author: comment.author, // shortcut syntax for `author: comment.author.observe()`
-}))
+import { hooks } from '@hypertill/db/react'
+
+const { data: chapter } = hooks.useChapter(chapterId)
+const { data: book } = hooks.useBook(chapter?.book?.id)
 ```
 
-The component will now have an `author` prop containing a `User`, and will re-render both when the user changes (e.g. comment's author changes its name), but also when a new author is assigned to the comment (if that was possible).
+The component will now have a `book` value containing the related `Book`, and will re-render when either the chapter or its book changes.
+
+If you need custom reactive composition, you can still use `withObservables` as described in [Connecting Components](./Components.md).
 
 ### Fetching
 
 To simply get the related record, use `fetch`. You might need it [in a Writer](./Writers.md)
 
 ```js
-const author = await comment.author.fetch()
+const book = await chapter.book.fetch()
 
 // Shortcut syntax:
-const author = await comment.author
+const book = await chapter.book
 ```
 
-**Note**: If the relation column (in this example, `author_id`) is marked as `isOptional: true`, `fetch()` might return `null`.
+**Note**: If the relation column (in this example, `book_id`) is marked as `isOptional: true`, `fetch()` might return `null`.
 
 ### ID
 
 If you only need the ID of a related record (e.g. to use in an URL or for the `key=` React prop), use `id`.
 
 ```js
-const authorId = comment.author.id
+const bookId = chapter.book.id
 ```
 
 ### Assigning
@@ -89,8 +91,8 @@ const authorId = comment.author.id
 Use `set()` to assign a new record to the relation
 
 ```js
-await database.get('comments').create(comment => {
-  comment.author.set(someUser)
+await database.get('chapters').create(chapter => {
+  chapter.book.set(someBook)
   // ...
 })
 ```
@@ -100,8 +102,8 @@ await database.get('comments').create(comment => {
 You can also use `set id` if you only have the ID for the record to assign
 
 ```js
-await comment.update(() => {
-  comment.author.id = userId
+await chapter.update(() => {
+  chapter.book.id = bookId
 })
 ```
 
@@ -109,40 +111,40 @@ await comment.update(() => {
 
 ### Many-To-Many Relation
 
-If for instance, our app `Post`s can be authored by many `User`s and a user can author many `Post`s. We would create such a relation following these steps:-
+If for instance, our app `Book`s can be authored by many `Author`s and an author can write many `Book`s. We would create such a relation following these steps:-
 
-1. Create a pivot schema and model that both the `User` model and `Post` model has association to; say `PostAuthor`
-2. Create has_many association on both `User` and `Post` pointing to `PostAuthor` Model
-3. Create belongs_to association on `PostAuthor` pointing to both `User` and `Post`
-4. Retrieve all `Posts` for a user by defining a query that uses the pivot `PostAuthor` to infer the `Post`s that were authored by the User.
+1. Create a pivot schema and model that both the `Author` model and `Book` model has association to; say `BookAuthor`
+2. Create has_many association on both `Author` and `Book` pointing to `BookAuthor`
+3. Create belongs_to association on `BookAuthor` pointing to both `Author` and `Book`
+4. Retrieve all `Books` for an author by defining a query that uses the pivot `BookAuthor` to infer the `Book`s authored by the Author.
 
 ```js
 import { lazy } from '@hypertill/db/decorators'
 
-class Post extends Model {
-  static table = 'posts'
+class Book extends Model {
+  static table = 'books'
   static associations = {
-    post_authors: { type: 'has_many', foreignKey: 'post_id' },
+    book_authors: { type: 'has_many', foreignKey: 'book_id' },
   }
 
   @lazy
   authors = this.collections
-    .get('users')
-    .query(Q.on('post_authors', 'post_id', this.id));
+    .get('authors')
+    .query(Q.on('book_authors', 'book_id', this.id));
 }
 ```
 
 ```js
 import { immutableRelation } from '@hypertill/db/decorators'
 
-class PostAuthor extends Model {
-  static table = 'post_authors'
+class BookAuthor extends Model {
+  static table = 'book_authors'
   static associations = {
-    posts: { type: 'belongs_to', key: 'post_id' },
-    users: { type: 'belongs_to', key: 'user_id' },
+    books: { type: 'belongs_to', key: 'book_id' },
+    authors: { type: 'belongs_to', key: 'author_id' },
   }
-  @immutableRelation('posts', 'post_id') post
-  @immutableRelation('users', 'user_id') user
+  @immutableRelation('books', 'book_id') book
+  @immutableRelation('authors', 'author_id') author
 }
 
 ```
@@ -150,23 +152,23 @@ class PostAuthor extends Model {
 ```js
 import { lazy } from '@hypertill/db/decorators'
 
-class User extends Model {
-  static table = 'users'
+class Author extends Model {
+  static table = 'authors'
   static associations = {
-    post_authors: { type: 'has_many', foreignKey: 'user_id' },
+    book_authors: { type: 'has_many', foreignKey: 'author_id' },
   }
 
   @lazy
-  posts = this.collections
-    .get('posts')
-    .query(Q.on('post_authors', 'user_id', this.id));
+  books = this.collections
+    .get('books')
+    .query(Q.on('book_authors', 'author_id', this.id));
 
 }
 ```
 
 ```js
-withObservables(['post'], ({ post }) => ({
-  authors: post.authors,
+withObservables(['book'], ({ book }) => ({
+  authors: book.authors,
 }))
 ```
 

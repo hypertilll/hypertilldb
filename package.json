@@ -1,7 +1,7 @@
 {
   "name": "@hypertill/db",
   "description": "Reactive offline-first database framework for React and React Native apps",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "engines": {
     "node": ">=18"
   },

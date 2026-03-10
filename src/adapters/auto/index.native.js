@@ -7,6 +7,7 @@ import type { SQLiteAdapterOptions } from '../sqlite/type'
 import type { LokiAdapterOptions } from '../lokijs'
 
 import SQLiteAdapter from '../sqlite'
+import { withDefaultMetadataColumns } from './metadata'
 
 export type PlatformAdapterOptions = $Exact<{
   schema: AppSchema,
@@ -18,9 +19,10 @@ export type PlatformAdapterOptions = $Exact<{
 
 export function createPlatformAdapter(options: PlatformAdapterOptions): DatabaseAdapter {
   const { schema, migrations, dbName, sqlite = {} } = options
+  const normalizedSchema = withDefaultMetadataColumns(schema)
   const sqliteOptions: $Shape<SQLiteAdapterOptions> = {
     ...sqlite,
-    schema,
+    schema: normalizedSchema,
   }
 
   if (migrations && !sqliteOptions.migrations) {

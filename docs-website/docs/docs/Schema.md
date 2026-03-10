@@ -4,36 +4,39 @@ When using Hypertill DB, you're dealing with **Models** and **Collections**. How
 
 ## Defining a Schema
 
-Say you want Models `Post`, `Comment` in your app. For each of those Models, you define a table. And for every field of a Model (e.g. name of the blog post, author of the comment) you define a column. For example:
+Say you want Models `Book`, `Chapter` in your app. For each of those Models, you define a table. And for every field of a Model (e.g. title of the book, chapter position) you define a column. For example:
 
 ```js
-// model/schema.js
+// db/schema.ts
 import { appSchema, tableSchema } from '@hypertill/db'
 
 export const mySchema = appSchema({
   version: 1,
   tables: [
     tableSchema({
-      name: 'posts',
+      name: 'books',
       columns: [
         { name: 'title', type: 'string' },
-        { name: 'subtitle', type: 'string', isOptional: true },
-        { name: 'body', type: 'string' },
-        { name: 'is_pinned', type: 'boolean' },
+        { name: 'author', type: 'string' },
+        { name: 'status', type: 'string' },
+        { name: 'updated_at', type: 'number' },
       ]
     }),
     tableSchema({
-      name: 'comments',
+      name: 'chapters',
       columns: [
-        { name: 'body', type: 'string' },
-        { name: 'post_id', type: 'string', isIndexed: true },
+        { name: 'book_id', type: 'string', isIndexed: true },
+        { name: 'title', type: 'string' },
+        { name: 'position', type: 'number' },
+        { name: 'updated_at', type: 'number' },
       ]
     }),
   ]
 })
 ```
 
-**Note:** It is database convention to use plural and snake_case names for table names. Column names are also snake_case. So `Post` become `posts` and `createdAt` becomes `created_at`.
+**Note:** It is database convention to use plural and snake_case names for table names. Column names are also snake_case. So `Book` becomes `books` and `createdAt` becomes `created_at`.
+When you use `createPlatformAdapter`, Hypertill DB automatically injects metadata columns (`deleted_at`, `created_tz`, `updated_tz`, `deleted_tz`) so you do not have to declare them in schema.
 
 ### Column types
 
@@ -45,10 +48,10 @@ To allow fields to be `null`, mark the column as `isOptional: true`.
 
 ### Naming conventions
 
-To add a relation to a table (e.g. `Post` where a `Comment` was published, or author of a comment), add a string column ending with `_id`:
+To add a relation to a table (e.g. `Book` for a `Chapter`), add a string column ending with `_id`:
 
 ```js
-{ name: 'post_id', type: 'string' },
+{ name: 'book_id', type: 'string' },
 { name: 'author_id', type: 'string' },
 ```
 
@@ -86,9 +89,9 @@ To enable database indexing, add `isIndexed: true` to a column.
 
 Indexing makes querying by a column faster, at the expense of create/update speed and database size.
 
-For example, if you often query all comments belonging to a post (that is, query comments by its `post_id` column), you should mark the `post_id` column as indexed.
+For example, if you often query all chapters belonging to a book (that is, query chapters by its `book_id` column), you should mark the `book_id` column as indexed.
 
-However, if you rarely query all comments by its author, indexing `author_id` is probably not worth it.
+However, if you rarely query all books by an author, indexing `author_id` is probably not worth it.
 
 In general, most `_id` fields are indexed. Occasionally, `boolean` fields are worth indexing (but it's a "low quality index"). However, you should almost never index date (`_at`) columns or `string` columns. You definitely do not want to index long-form user text.
 

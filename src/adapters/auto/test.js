@@ -11,6 +11,10 @@ const schema = appSchema({
 })
 
 const migrations = { migrations: [] }
+const metadataColumnNames = ['deleted_at', 'created_tz', 'updated_tz', 'deleted_tz']
+
+const getColumnNames = (schema) =>
+  schema.tables.auto_test.columnArray.map((column) => column.name)
 
 describe('createPlatformAdapter', () => {
   afterEach(() => {
@@ -30,13 +34,14 @@ describe('createPlatformAdapter', () => {
 
     expect(adapter.type).toBe('sqlite')
     expect(sqliteMock).toHaveBeenCalledTimes(1)
-    expect(sqliteMock).toHaveBeenCalledWith(
+    const call = sqliteMock.mock.calls[0][0]
+    expect(call).toEqual(
       expect.objectContaining({
-        schema,
         dbName: 'test-db',
         migrations,
       }),
     )
+    expect(getColumnNames(call.schema)).toEqual(['name', ...metadataColumnNames])
   })
 
   it('creates sqlite adapter with jsi=true by default in native implementation', () => {
@@ -49,12 +54,13 @@ describe('createPlatformAdapter', () => {
     })
 
     expect(sqliteMock).toHaveBeenCalledTimes(1)
-    expect(sqliteMock).toHaveBeenCalledWith(
+    const call = sqliteMock.mock.calls[0][0]
+    expect(call).toEqual(
       expect.objectContaining({
-        schema,
         jsi: true,
       }),
     )
+    expect(getColumnNames(call.schema)).toEqual(['name', ...metadataColumnNames])
   })
 
   it('creates loki adapter with web defaults in web implementation', () => {
@@ -70,14 +76,15 @@ describe('createPlatformAdapter', () => {
 
     expect(adapter.type).toBe('loki')
     expect(lokiMock).toHaveBeenCalledTimes(1)
-    expect(lokiMock).toHaveBeenCalledWith(
+    const call = lokiMock.mock.calls[0][0]
+    expect(call).toEqual(
       expect.objectContaining({
-        schema,
         dbName: 'web-db',
         migrations,
         useWebWorker: false,
         useIncrementalIndexedDB: true,
       }),
     )
+    expect(getColumnNames(call.schema)).toEqual(['name', ...metadataColumnNames])
   })
 })

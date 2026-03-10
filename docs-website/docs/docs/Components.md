@@ -1,16 +1,18 @@
 # Connecting Components
 
-Hypertill DB `0.0.1` ships three React helpers that matter for day-to-day app work:
+Hypertill DB `0.0.3` ships the React helpers you need for day-to-day app work:
 
 - `DatabaseProvider`
 - `useDatabase`
+- `hooks` (auto-generated query hooks)
 - `withObservables`
 
 The current recommended split is simple:
 
 - use `DatabaseProvider` once at the app root
-- use `withObservables` for reactive records, relations, lists, and counts
+- use `hooks` for reactive reads
 - use `useDatabase` for writes, screen actions, and imperative work
+- use `withObservables` when you need custom reactive composition
 
 ## Start with the provider
 
@@ -32,9 +34,50 @@ export default function App() {
 
 Every reactive component or screen action then works off the same database instance.
 
-## Reactive reads with `withObservables`
+## Reactive reads with `hooks`
 
-The package does not yet ship first-party query hooks in `0.0.1`. The supported reactive read path today is `withObservables`.
+Auto-generated hooks are now available in `0.0.3`. For each model, you get:
+
+- `hooks.use<Model>(id)` for a single record
+- `hooks.use<Models>(filters?)` for lists
+- `hooks.use<Models>Advanced({ q })` for direct `Q` clauses
+
+Example usage:
+
+```tsx
+import { hooks } from '@hypertill/db/react'
+
+const { data: books, loading } = hooks.useBooks({
+  search: 'deep',
+  timeframe: '30d',
+  sort: 'updated_desc',
+})
+
+const { data: book } = hooks.useBook(bookId)
+
+const { data: advanced } = hooks.useBooksAdvanced({
+  q: (Q) => [Q.where('status', Q.eq('reading'))],
+})
+```
+
+Generic variants are also available:
+
+```tsx
+import { hooks } from '@hypertill/db/react'
+
+const { data: notes } = hooks.useModels(Note, { search: 'hello' })
+const { data: note } = hooks.useModel(Note, noteId)
+```
+
+### How filters work
+
+- `search` automatically scans all string columns (or `searchIn` if provided)
+- `timeframe` uses `updated_at` when available, otherwise `created_at`
+- `sort` picks the relevant timestamp column and order
+
+## Advanced reactive reads with `withObservables`
+
+Use `withObservables` when you need custom reactive composition, counts, or nested queries that exceed the hook defaults.
 
 Here is a practical TypeScript example that loads one book, its chapters, and a live count:
 
@@ -143,15 +186,11 @@ const enhance = withObservables(['book'], ({ book }) => ({
 
 That way the UI updates when the sort order changes, not just when rows are inserted or deleted.
 
-## Current note on hooks
+## When to use which
 
-If you are expecting a package-level `useBooks()` or `useQuery()` API, that is not part of `0.0.1`. The current production-safe guidance is:
-
-- `withObservables` for live reads
+- `hooks` for the default live read path
+- `withObservables` for complex composition or custom reactive graphs
 - `useDatabase` for writes and imperative logic
-- app-local abstractions on top if your project wants cleaner domain hooks
-
-The shipped Expo demo follows that same reality, and it is the best reference for how the package behaves right now.
 
 ## Next steps
 
