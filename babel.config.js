@@ -20,7 +20,7 @@ const plugins = [
   ],
   ['@babel/plugin-proposal-decorators', { legacy: true }],
   '@babel/plugin-transform-flow-strip-types',
-  ['@babel/plugin-proposal-class-properties', { loose: true }],
+  ['@babel/plugin-transform-class-properties', { loose: true }],
   [
     '@babel/plugin-transform-classes',
     {
@@ -33,7 +33,8 @@ const plugins = [
   '@babel/plugin-proposal-unicode-property-regex',
   // See http://incaseofstairs.com/six-speed/ for speed comparison between native and transpiled ES6
   '@babel/plugin-proposal-optional-chaining',
-  ['@babel/plugin-proposal-private-methods', { loose: true }],
+  ['@babel/plugin-transform-private-methods', { loose: true }],
+  ['@babel/plugin-transform-private-property-in-object', { loose: true }],
   '@babel/plugin-transform-template-literals',
   '@babel/plugin-transform-literals',
   '@babel/plugin-transform-function-name',
