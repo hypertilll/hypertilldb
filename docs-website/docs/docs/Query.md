@@ -7,9 +7,9 @@ hide_title: true
 
 **Querying** is how you find records that match certain conditions, for example:
 
-- Find all comments that belong to a certain post
-- Find all _verified_ comments made by John
-- Count all verified comments made by John or Lucy published under posts made in the last two weeks
+- Find all chapters that belong to a certain book
+- Find all _reviewed_ notes made by John
+- Count all reviewed notes made by John or Lucy created in the last two weeks
 
 Because queries are executed on the database, and not in JavaScript, they're really fast. It's also how Hypertill can be fast even at large scales, because even with tens of thousands of records _total_, you rarely need to load more than a few dozen records at app launch.
 
@@ -17,12 +17,12 @@ Because queries are executed on the database, and not in JavaScript, they're rea
 
 ### @children
 
-The simplest query is made using `@children`. This defines a `Query` for all comments that belong to a `Post`:
+The simplest query is made using `@children`. This defines a `Query` for all chapters that belong to a `Book`:
 
 ```js
-class Post extends Model {
+class Book extends Model {
   // ...
-  @children('comments') comments
+  @children('chapters') chapters
 }
 ```
 
@@ -36,16 +36,16 @@ To **narrow down** a `Query` (add [extra conditions](#query-conditions) to an ex
 import { Q } from '@hypertill/db'
 import { children, lazy } from '@hypertill/db/decorators'
 
-class Post extends Model {
+class Book extends Model {
   // ...
-  @children('comments') comments
+  @children('chapters') chapters
 
-  @lazy verifiedComments = this.comments.extend(
-    Q.where('is_verified', true)
+  @lazy reviewedChapters = this.chapters.extend(
+    Q.where('is_reviewed', true)
   )
 
-  @lazy verifiedAwesomeComments = this.verifiedComments.extend(
-    Q.where('is_awesome', true)
+  @lazy reviewedFavoriteChapters = this.reviewedChapters.extend(
+    Q.where('is_favorite', true)
   )
 }
 ```
@@ -59,35 +59,37 @@ You can query any table like so:
 ```js
 import { Q } from '@hypertill/db'
 
-const users = await database.get('users').query(
-  // conditions that a user must match:
-  Q.on('comments', 'post_id', somePostId)
+const books = await database.get('books').query(
+  // conditions that a book must match:
+  Q.on('chapters', 'title', Q.like('%Intro%'))
 ).fetch()
 ```
 
-This fetches all users that made a comment under a post with `id = somePostId`.
+This fetches all books that have a chapter with "Intro" in the title.
 
 You can define custom queries on a Model like so:
 
 ```js
-class Post extends Model {
+class Book extends Model {
   // ...
-  @lazy commenters = this.collections.get('users').query(
-    Q.on('comments', 'post_id', this.id)
+  @lazy introChapters = this.collections.get('chapters').query(
+    Q.where('book_id', this.id),
+    Q.where('title', Q.like('%Intro%'))
   )
 }
 ```
 
 ## Executing Queries
 
-Most of the time, you execute Queries by connecting them to React Components like so:
+Most of the time, you execute Queries by connecting them to React Components. The default path in `0.0.3` is to use auto-generated hooks:
 
 ```js
-withObservables(['post'], ({ post }) => ({
-  post,
-  comments: post.comments,
-  verifiedCommentCount: post.verifiedComments.observeCount(),
-}))
+import { hooks } from '@hypertill/db/react'
+
+const { data: book } = hooks.useBook(bookId)
+const { data: chapters, count } = hooks.useChaptersAdvanced({
+  q: (Q) => [Q.where('book_id', bookId), Q.sortBy('position', Q.asc)],
+})
 ```
 
 **➡️ Learn more:** [Connecting to Components](./Components.md)
@@ -97,12 +99,12 @@ withObservables(['post'], ({ post }) => ({
 To simply get the current list or current count (without observing future changes), use `fetch` / `fetchCount`.
 
 ```js
-const comments = await post.comments.fetch()
-const verifiedCommentCount = await post.verifiedComments.fetchCount()
+const chapters = await book.chapters.fetch()
+const reviewedCount = await book.reviewedChapters.fetchCount()
 
 // Shortcut syntax:
-const comments = await post.comments
-const verifiedCommentCount = await post.verifiedComments.count
+const chapters = await book.chapters
+const reviewedCount = await book.reviewedChapters.count
 ```
 
 ## Query conditions
@@ -110,12 +112,12 @@ const verifiedCommentCount = await post.verifiedComments.count
 ```js
 import { Q } from '@hypertill/db'
 // ...
-database.get('comments').query(
-  Q.where('is_verified', true)
+database.get('chapters').query(
+  Q.where('is_reviewed', true)
 )
 ```
 
-This will query **all** comments that are verified (all comments with one condition: the `is_verified` column of a comment must be `true`).
+This will query **all** chapters that are reviewed (all chapters with one condition: the `is_reviewed` column of a chapter must be `true`).
 
 When making conditions, you refer to [**column names**](./Schema.md) of a table (i.e. `is_verified`, not `isVerified`). This is because queries are executed directly on the underlying database.
 
@@ -124,7 +126,7 @@ The second argument is the value we want to query for. Note that the passed argu
 #### Empty query
 
 ```js
-const allComments = await database.get('comments').query().fetch()
+const allChapters = await database.get('chapters').query().fetch()
 ```
 
 A Query with no conditions will find **all** records in the collection.
@@ -134,13 +136,13 @@ A Query with no conditions will find **all** records in the collection.
 #### Multiple conditions
 
 ```js
-database.get('comments').query(
-  Q.where('is_verified', true),
-  Q.where('is_awesome', true)
+database.get('chapters').query(
+  Q.where('is_reviewed', true),
+  Q.where('is_favorite', true)
 )
 ```
 
-This queries all comments that are **both** verified **and** awesome.
+This queries all chapters that are **both** reviewed **and** favorite.
 
 ### Conditions with other operators
 
@@ -186,10 +188,10 @@ Q.notLike(`%${Q.sanitizeLikeString(userInput)}%`)
 You can nest multiple conditions using `Q.and` and `Q.or`:
 
 ```js
-database.get('comments').query(
+database.get('chapters').query(
   Q.where('archived_at', Q.notEq(null)),
   Q.or(
-    Q.where('is_verified', true),
+    Q.where('is_reviewed', true),
     Q.and(
       Q.where('likes', Q.gt(10)),
       Q.where('dislikes', Q.lt(5))
@@ -202,21 +204,21 @@ This is equivalent to `archivedAt !== null && (isVerified || (likes > 10 && disl
 
 ### Conditions on related tables ("JOIN queries")
 
-For example: query all comments under posts published by John:
+For example: query all chapters under books published by John:
 
 ```js
 // Shortcut syntax:
-database.get('comments').query(
-  Q.on('posts', 'author_id', john.id),
+database.get('chapters').query(
+  Q.on('books', 'author_id', john.id),
 )
 
 // Full syntax:
-database.get('comments').query(
-  Q.on('posts', Q.where('author_id', Q.eq(john.id))),
+database.get('chapters').query(
+  Q.on('books', Q.where('author_id', Q.eq(john.id))),
 )
 ```
 
-Normally you set conditions on the table you're querying. Here we're querying **comments**, but we have a condition on the **post** the comment belongs to.
+Normally you set conditions on the table you're querying. Here we're querying **chapters**, but we have a condition on the **book** the chapter belongs to.
 
 The first argument for `Q.on` is the table name you're making a condition on. The other two arguments are same as for `Q.where`.
 
@@ -224,11 +226,11 @@ The first argument for `Q.on` is the table name you're making a condition on. Th
 
 #### Multiple conditions on a related table
 
-For example: query all comments under posts that are written by John *and* are either published or belong to `draftBlog`
+For example: query all chapters under books that are written by John *and* are either published or belong to `draftBlog`
 
 ```js
-database.get('comments').query(
-  Q.on('posts', [
+database.get('chapters').query(
+  Q.on('books', [
     Q.where('author_id', john.id)
     Q.or(
       Q.where('published', true),
@@ -278,10 +280,10 @@ By default, calling `query.observeCount()` returns an Observable that is throttl
 
 ### Column comparisons
 
-This queries comments that have more likes than dislikes. Note that we're comparing `likes` column to another column instead of a value.
+This queries chapters that have more likes than dislikes. Note that we're comparing `likes` column to another column instead of a value.
 
 ```js
-database.get('comments').query(
+database.get('chapters').query(
   Q.where('likes', Q.gt(Q.column('dislikes')))
 )
 ```
@@ -291,12 +293,12 @@ database.get('comments').query(
 You can use these clauses to sort the query by one or more columns. Note that only simple ascending/descending criteria for columns are supported.
 
 ```js
-database.get('comments').query(
+database.get('chapters').query(
   // sorts by number of likes from the most likes to the fewest
   Q.sortBy('likes', Q.desc),
-  // if two comments have the same number of likes, the one with fewest dislikes will be at the top
+  // if two chapters have the same number of likes, the one with fewest dislikes will be at the top
   Q.sortBy('dislikes', Q.asc),
-  // limit number of comments to 100, skipping the first 50
+  // limit number of chapters to 100, skipping the first 50
   Q.skip(50),
   Q.take(100),
 )
@@ -321,25 +323,25 @@ Remember that Queries are a sensitive subject, security-wise. Never trust user i
 ### Unsafe SQL queries
 
 ```js
-const records = await database.get('comments').query(
-  Q.unsafeSqlQuery(`select * from comments where foo is not ? and _status is not 'deleted'`, ['bar'])
+const records = await database.get('chapters').query(
+  Q.unsafeSqlQuery(`select * from chapters where foo is not ? and _status is not 'deleted'`, ['bar'])
 ).fetch()
 
-const recordCount = await database.get('comments').query(
-  Q.unsafeSqlQuery(`select count(*) as count from comments where foo is not ? and _status is not 'deleted'`, ['bar'])
+const recordCount = await database.get('chapters').query(
+  Q.unsafeSqlQuery(`select count(*) as count from chapters where foo is not ? and _status is not 'deleted'`, ['bar'])
 ).fetchCount()
 ```
 
 You can also observe unsafe raw SQL queries, however, if it contains `JOIN` statements, you must explicitly specify all other tables using `Q.experimentalJoinTables` and/or `Q.experimentalNestedJoin`, like so:
 
 ```js
-const records = await database.get('comments').query(
-  Q.experimentalJoinTables(['posts']),
-  Q.experimentalNestedJoin('posts', 'blogs'),
+const records = await database.get('chapters').query(
+  Q.experimentalJoinTables(['books']),
+  Q.experimentalNestedJoin('books', 'blogs'),
   Q.unsafeSqlQuery(
-    'select comments.* from comments ' +
-      'left join posts on comments.post_id is posts.id ' +
-      'left join blogs on posts.blog_id is blogs.id' +
+    'select chapters.* from chapters ' +
+      'left join books on chapters.book_id is books.id ' +
+      'left join blogs on books.blog_id is blogs.id' +
       'where ...',
   ),
 ).observe()
@@ -359,12 +361,12 @@ In addition to `.fetch()` and `.fetchIds()`, there is also `.unsafeFetchRaw()`. 
 You can use it as an unsafe optimization, or alongside `Q.unsafeSqlQuery`/`Q.unsafeLokiTransform` to create an advanced query that either skips fetching unnecessary columns or includes extra computed columns. For example:
 
 ```js
-const rawData = await database.get('posts').query(
+const rawData = await database.get('books').query(
   Q.unsafeSqlQuery(
-    'select posts.text1, count(tag_assignments.id) as tag_count, sum(tag_assignments.rank) as tag_rank from posts' +
-      ' left join tag_assignments on posts.id = tag_assignments.post_id' +
-      ' group by posts.id' +
-      ' order by posts.position desc',
+    'select books.text1, count(tag_assignments.id) as tag_count, sum(tag_assignments.rank) as tag_rank from books' +
+      ' left join tag_assignments on books.id = tag_assignments.book_id' +
+      ' group by books.id' +
+      ' order by books.position desc',
   )
 ).unsafeFetchRaw()
 ```
@@ -377,13 +379,13 @@ You can also include smaller bits of SQL and Loki expressions so that you can st
 
 ```js
 // SQL example:
-postsCollection.query(
+booksCollection.query(
   Q.where('is_published', true),
   Q.unsafeSqlExpr('tasks.num1 not between 1 and 5'),
 )
 
 // LokiJS example:
-postsCollection.query(
+booksCollection.query(
   Q.where('is_published', true),
   Q.unsafeLokiExpr({ text1: { $contains: 'hey' } })
 )
@@ -395,24 +397,24 @@ For SQL, be sure to prefix column names with table name when joining with other 
 
 ### Multi-table column comparisons and `Q.unsafeLokiTransform`
 
-Example: we want to query comments posted more than 14 days after the post it belongs to was published.
+Example: we want to query chapters created more than 14 days after the book it belongs to was published.
 
 There's sadly no built-in syntax for this, but can be worked around using unsafe expressions like so:
 
 ```js
 // SQL example:
-commentsCollection.query(
-  Q.on('posts', 'published_at', Q.notEq(null)),
-  Q.unsafeSqlExpr(`comments.createad_at > posts.published_at + ${14 * 24 * 3600 * 1000}`)
+chaptersCollection.query(
+  Q.on('books', 'published_at', Q.notEq(null)),
+  Q.unsafeSqlExpr(`chapters.created_at > books.published_at + ${14 * 24 * 3600 * 1000}`)
 )
 
 // LokiJS example:
-commentsCollection.query(
-  Q.on('posts', 'published_at', Q.notEq(null)),
+chaptersCollection.query(
+  Q.on('books', 'published_at', Q.notEq(null)),
   Q.unsafeLokiTransform((rawRecords, loki) => {
     return rawRecords.filter(rawRecord => {
-      const post = loki.getCollection('posts').by('id', rawRecord.post_id)
-      return post && rawRecord.created_at > post.published_at + 14 * 24 * 3600 * 1000
+      const book = loki.getCollection('books').by('id', rawRecord.book_id)
+      return book && rawRecord.created_at > book.published_at + 14 * 24 * 3600 * 1000
     })
   }),
 )
@@ -426,14 +428,14 @@ There are some gotchas you should be aware of. The `Q.gt`, `gte`, `lt`, `lte`, `
 
 **Rule of thumb:** No null comparisons are allowed.
 
-For example, if you query `comments` for `Q.where('likes', Q.lt(10))`, a comment with 8 likes and 0 likes will be included, but a comment with `null` likes will not! In Hypertill queries, `null` is not less than any number. That's why you should avoid [making table columns optional](./Schema.md) unless you actually need it.
+For example, if you query `chapters` for `Q.where('likes', Q.lt(10))`, a chapter with 8 likes and 0 likes will be included, but a chapter with `null` likes will not! In Hypertill queries, `null` is not less than any number. That's why you should avoid [making table columns optional](./Schema.md) unless you actually need it.
 
-Similarly, if you query with a column comparison, like `Q.where('likes', Q.gt(Q.column('dislikes')))`, only comments where both `likes` and `dislikes` are not null will be compared. A comment with 5 likes and `null` dislikes will NOT be included. 5 is not greater than `null` here.
+Similarly, if you query with a column comparison, like `Q.where('likes', Q.gt(Q.column('dislikes')))`, only chapters where both `likes` and `dislikes` are not null will be compared. A chapter with 5 likes and `null` dislikes will NOT be included. 5 is not greater than `null` here.
 
 **`Q.oneOf` operator**: It is not allowed to pass `null` as an argument to `Q.oneOf`. Instead of `Q.oneOf([null, 'published', 'draft'])` you need to explicitly allow `null` as a value like so:
 
 ```js
-postsCollection.query(
+booksCollection.query(
   Q.or(
     Q.where('status', Q.oneOf(['published', 'draft'])),
     Q.where('status', null)
@@ -441,9 +443,9 @@ postsCollection.query(
 )
 ```
 
-**`Q.notIn` operator**: If you query, say, posts with `Q.where('status', Q.notIn(['published', 'draft']))`, it will match posts with a status different than `published` or `draft`, however, it will NOT match posts with `status == null`. If you want to include such posts, query for that explicitly like with the example above.
+**`Q.notIn` operator**: If you query, say, books with `Q.where('status', Q.notIn(['published', 'draft']))`, it will match books with a status different than `published` or `draft`, however, it will NOT match books with `status == null`. If you want to include such books, query for that explicitly like with the example above.
 
-**`Q.weakGt` operator**: This is weakly typed version of `Q.gt` — one that allows null comparisons. So if you query `comments` with `Q.where('likes', Q.weakGt(Q.column('dislikes')))`, it WILL match comments with 5 likes and `null` dislikes. (For `weakGt`, unlike standard operators, any number is greater than `null`).
+**`Q.weakGt` operator**: This is weakly typed version of `Q.gt` — one that allows null comparisons. So if you query `chapters` with `Q.where('likes', Q.weakGt(Q.column('dislikes')))`, it WILL match chapters with 5 likes and `null` dislikes. (For `weakGt`, unlike standard operators, any number is greater than `null`).
 
 ## Contributing improvements to Hypertill query language
 

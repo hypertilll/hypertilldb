@@ -68,7 +68,11 @@ function isValidStatus(value: any): boolean {
 
 // Transforms a dirty raw record object into a trusted sanitized RawRecord according to passed TableSchema
 // TODO: Should we make this public API for advanced users?
-export function sanitizedRaw(dirtyRaw: DirtyRaw, tableSchema: TableSchema): RawRecord {
+export function sanitizedRaw(
+  dirtyRaw: DirtyRaw,
+  tableSchema: TableSchema,
+  idGenerator: () => string = randomId,
+): RawRecord {
   const { id, _status, _changed } = dirtyRaw
 
   // This is called with `{}` when making a new record, so we need to set a new ID, status
@@ -86,7 +90,7 @@ export function sanitizedRaw(dirtyRaw: DirtyRaw, tableSchema: TableSchema): RawR
     raw._status = isValidStatus(_status) ? _status : 'created'
     raw._changed = typeof _changed === 'string' ? _changed : ''
   } else {
-    raw.id = randomId()
+    raw.id = idGenerator()
     raw._status = 'created'
     raw._changed = ''
   }

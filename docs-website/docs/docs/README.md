@@ -7,11 +7,12 @@ hide_title: true
 
 Hypertill DB is the published HelaPoint-maintained fork of WatermelonDB. It keeps the same local-first database architecture, but the package identity, docs, and mobile example app now ship under the Hypertill name.
 
-## What 0.0.1 already gives you
+## What 0.0.3 already gives you
 
 - The npm package: [`@hypertill/db`](https://www.npmjs.com/package/@hypertill/db)
 - Expo SDK 54+ support through the built-in package plugin
 - React helpers: `DatabaseProvider`, `useDatabase`, and `withObservables`
+- Auto-generated React query hooks via `hooks.use<Model>` and generic `hooks.useModels`
 - SQLite adapters for iOS, Android, and Node.js
 - LokiJS support for browser-based usage
 - A TypeScript Expo reference app for books, chapters, book notes, and chapter notes
@@ -24,12 +25,24 @@ Hypertill DB is the published HelaPoint-maintained fork of WatermelonDB. It keep
 4. Connect React screens: [Connecting Components](https://db.hypertill.com/docs/Components)
 5. Review the working mobile reference: [expo-hypertillDB-example](https://github.com/hypertilll/expo-hypertillDB-example)
 
-## Current React guidance in 0.0.1
+## Current React guidance in 0.0.3
 
 - Put `DatabaseProvider` at the app root once.
-- Use `withObservables` for reactive records, relations, lists, and counts.
+- Use `hooks` for reactive reads (`hooks.use<Model>`, `hooks.use<Models>`, `hooks.use<Models>Advanced`).
 - Use `useDatabase` for writes, screen actions, and imperative lookups.
-- First-party query hooks are not part of `0.0.1`, so the package still favors observable composition for live reads.
+- `withObservables` is still supported for advanced or highly custom reactive compositions.
+
+Example hook usage:
+
+```tsx
+import { hooks } from '@hypertill/db/react'
+
+const { data: notes, loading } = hooks.useNotes({ search: 'hello', timeframe: '7d' })
+const { data: note } = hooks.useNote(noteId)
+const { data: advanced } = hooks.useNotesAdvanced({
+  q: (Q) => [Q.where('title', Q.like('%hello%'))],
+})
+```
 
 ## Core package surface
 

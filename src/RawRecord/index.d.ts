@@ -21,7 +21,11 @@ type _RawRecord = {
 export type RawRecord = _RawRecord
 
 // Transforms a dirty raw record object into a trusted sanitized RawRecord according to passed TableSchema
-export function sanitizedRaw(dirtyRaw: DirtyRaw, tableSchema: TableSchema): RawRecord
+export function sanitizedRaw(
+  dirtyRaw: DirtyRaw,
+  tableSchema: TableSchema,
+  idGenerator?: () => string,
+): RawRecord
 
 // Modifies passed rawRecord by setting sanitized `value` to `columnName`
 // Note: Assumes columnName exists and columnSchema matches the name

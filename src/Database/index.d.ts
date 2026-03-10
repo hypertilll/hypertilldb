@@ -18,6 +18,13 @@ import { $ReadOnlyArray, $Exact, Class } from '../types'
 type DatabaseProps = $Exact<{
   adapter: DatabaseAdapter
   modelClasses: Class<Model>[] | Model[]
+  recordIds?: $Exact<{
+    strategy?: 'uuidv4' | 'uuidv7'
+  }>
+  timestamps?: $Exact<{
+    mode?: 'epoch' | 'epoch+timezone'
+    timezoneSource?: 'device' | 'utc' | string
+  }>
 }>
 
 export function setExperimentalAllowsFatalError(): void
@@ -28,6 +35,8 @@ export default class Database {
   schema: AppSchema
 
   collections: CollectionMap
+
+  modelClasses: Class<Model>[]
 
   _workQueue: WorkQueue
 
@@ -98,4 +107,10 @@ export default class Database {
   // (experimental) puts Database in a broken state
   // TODO: Not used anywhere yet
   _fatalError(error: Error): void
+
+  _generateRecordId(): string
+
+  _nextTimestamp(): { epochMs: number; timezone: string }
+
+  _timestampsMode(): 'epoch' | 'epoch+timezone'
 }

@@ -14,19 +14,17 @@ For most apps, start with npm:
 
 ```bash
 npm install @hypertill/db
-npm install -D @babel/plugin-proposal-decorators
 ```
 
 If you already know you are building with Expo, install the dev client too:
 
 ```bash
 npm install @hypertill/db expo-dev-client
-npm install -D @babel/plugin-proposal-decorators
 ```
 
 ## Recommended path: Expo SDK 54+
 
-Hypertill DB `0.0.1` ships an Expo config plugin in the package. That is the easiest current way to get Android JSI wiring and native SQLite linked without manually editing Gradle files.
+Hypertill DB `0.0.3` ships an Expo config plugin in the package. That is the easiest current way to get Android JSI wiring and native SQLite linked without manually editing Gradle files.
 
 ### 1. Register the package plugin
 
@@ -40,15 +38,36 @@ Add `@hypertill/db` to your Expo plugins list:
 }
 ```
 
-### 2. Enable legacy decorators in Babel
+### 2. Babel is auto-configured by the package plugin
+
+When `@hypertill/db` runs as an Expo plugin, it automatically patches `babel.config.js` with the required decorator/class-field plugin chain (in the right order).
+
+You can still manage Babel manually if you want full control:
 
 ```js
 module.exports = function (api) {
   api.cache(true)
+  const resolveFromHypertill = (plugin) =>
+    require.resolve(plugin, { paths: [require.resolve('@hypertill/db/package.json')] })
 
   return {
     presets: ['babel-preset-expo'],
-    plugins: [['@babel/plugin-proposal-decorators', { legacy: true }]],
+    plugins: [
+      [resolveFromHypertill('@babel/plugin-proposal-decorators'), { legacy: true }],
+      [resolveFromHypertill('@babel/plugin-proposal-class-properties'), { loose: true }],
+      [resolveFromHypertill('@babel/plugin-proposal-private-methods'), { loose: true }],
+      [resolveFromHypertill('@babel/plugin-proposal-private-property-in-object'), { loose: true }],
+    ],
+  }
+}
+```
+
+To opt out of automatic Babel patching:
+
+```json
+{
+  "expo": {
+    "plugins": [["@hypertill/db", { "disableAutoBabelConfig": true }], "expo-dev-client"]
   }
 }
 ```
@@ -73,15 +92,25 @@ If you are not using Expo, the package still works as a regular React Native nat
 
 ```bash
 npm install @hypertill/db
-npm install -D @babel/plugin-proposal-decorators
 ```
 
 ### 2. Enable decorators
 
-```json
-{
-  "presets": ["module:metro-react-native-babel-preset"],
-  "plugins": [["@babel/plugin-proposal-decorators", { "legacy": true }]]
+```js
+module.exports = function (api) {
+  api.cache(true)
+  const resolveFromHypertill = (plugin) =>
+    require.resolve(plugin, { paths: [require.resolve('@hypertill/db/package.json')] })
+
+  return {
+    presets: ['module:metro-react-native-babel-preset'],
+    plugins: [
+      [resolveFromHypertill('@babel/plugin-proposal-decorators'), { legacy: true }],
+      [resolveFromHypertill('@babel/plugin-proposal-class-properties'), { loose: true }],
+      [resolveFromHypertill('@babel/plugin-proposal-private-methods'), { loose: true }],
+      [resolveFromHypertill('@babel/plugin-proposal-private-property-in-object'), { loose: true }],
+    ],
+  }
 }
 ```
 
@@ -146,7 +175,7 @@ override fun getPackages(): List<ReactPackage> {
 }
 ```
 
-The Gradle subproject name remains `:watermelondb-jsi` in `0.0.1` for compatibility, even though the Java package names are rebranded to `com.hypertill.db.*`.
+The Gradle subproject name remains `:watermelondb-jsi` in `0.0.3` for compatibility, even though the Java package names are rebranded to `com.hypertill.db.*`.
 
 </details>
 

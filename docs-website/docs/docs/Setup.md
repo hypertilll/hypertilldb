@@ -137,10 +137,11 @@ export default function App() {
 
 At this point, your app is ready for:
 
-- reactive reads via `withObservables`
+- reactive reads via `hooks` (`hooks.use<Model>`, `hooks.use<Models>`, `hooks.use<Models>Advanced`)
 - writes and imperative lookups via `useDatabase`
+- advanced compositions via `withObservables` when needed
 
-That split is the current recommended React pattern for `0.0.1`. Continue with [Connecting Components](./Components).
+That split is the current recommended React pattern for `0.0.3`. Continue with [Connecting Components](./Components).
 
 ## Related guides
 

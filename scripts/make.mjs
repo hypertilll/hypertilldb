@@ -116,6 +116,7 @@ const copyFiles = (dir, files, rm = resolvePath()) =>
 const copyNonJavaScriptFiles = (buildPath) => {
   createPackageJson(buildPath, pkg)
   copyFiles(buildPath, [
+    '.npmignore',
     'LICENSE',
     'README.md',
     'yarn.lock',
