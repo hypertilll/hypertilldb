@@ -64,6 +64,11 @@ jobs:
       - name: 'pod install'
         if: true # steps.pods-cache.outputs.cache-hit != 'true'
         run: yarn cocoapods
+      - name: Install iOS platform support
+        run: |
+          sudo xcodebuild -downloadPlatform iOS
+          xcrun simctl list runtimes
+          xcrun simctl list devices available
       - run: yarn test:ios
   android:
     runs-on: ubuntu-24.04
