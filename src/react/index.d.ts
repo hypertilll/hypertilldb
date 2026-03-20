@@ -23,6 +23,9 @@ export type SimpleQueryOptions = {
 }
 
 export type AdvancedQueryOptions = {
+  clauses?: Clause[]
+  inputs?: unknown[]
+  observeWithColumns?: string[]
   q?: (Q: typeof import('../QueryDescription')) => Clause[]
 }
 

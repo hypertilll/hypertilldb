@@ -1,12 +1,14 @@
 # Create, Read, Update, Delete
 
-When you have your [Schema](./Schema.md) and [Models](./Model.md) defined, learn how to manipulate them!
+Once your [Schema](./Schema.md) and [Model](./Model.md) classes are in place, the next step is working with records.
+
+The examples below keep using the same `Book` and `Chapter` library app.
 
 ## Reading
 
-#### Reactive reads with hooks (recommended)
+### Reactive reads with hooks (recommended)
 
-```js
+```tsx
 import { hooks } from '@hypertill/db/react'
 
 const { data: books, loading } = hooks.useBooks({
@@ -17,156 +19,184 @@ const { data: books, loading } = hooks.useBooks({
 const { data: book } = hooks.useBook(bookId)
 
 const { data: chapters } = hooks.useChaptersAdvanced({
+  inputs: [bookId],
   q: (Q) => [Q.where('book_id', bookId), Q.sortBy('position', Q.asc)],
 })
 ```
 
-#### Get a collection
+Use `inputs` whenever the advanced query is built inline. That keeps the hook reactive without forcing every caller to wrap `q` in `useMemo()` or `useCallback()`.
 
-The `Collection` object is how you find, query, and create new records of a given type.
+### Get a collection
 
-```js
+The `Collection` object is how you query, find, and create records of one model type.
+
+```ts
 const booksCollection = database.get('books')
 ```
 
-Pass the [table name](./Schema.md) as the argument.
+`database.get(tableName)` is shorthand for `database.collections.get(tableName)`.
 
-#### Find a record (by ID)
+### Find a record by id
 
-```js
-const bookId = 'abcdefgh'
+```ts
 const book = await database.get('books').find(bookId)
 ```
 
-`find()` returns a Promise. If the record cannot be found, the Promise will be rejected.
+`find()` rejects if the record does not exist.
 
-#### Query records
+### Query records imperatively
 
-Find a list of records matching given conditions by making a Query and then fetching it:
+```ts
+import { Q } from '@hypertill/db'
 
-```js
-const allBooks = await database.get('books').query().fetch()
-const numberOfFavoriteBooks = await database.get('books').query(
-  Q.where('is_favorite', true)
+const readingBooks = await database.get('books').query(
+  Q.where('status', 'reading'),
+  Q.sortBy('updated_at', Q.desc),
+).fetch()
+
+const chapterCount = await database.get('chapters').query(
+  Q.where('book_id', bookId),
 ).fetchCount()
 ```
 
-**➡️ Learn more:** [Queries](./Query.md)
+See [Query](./Query) for the full query API.
 
 ## Modifying the database
 
-All modifications to the database (like creating, updating, deleting records) must be done **in a Writer**, either by wrapping your work in `database.write()`:
+All creates, updates, and deletes must run inside a writer.
 
-```js
+The two normal choices are:
+
+- wrap work in `database.write(...)`
+- define `@writer` methods on models
+
+### Inline writer
+
+```ts
 await database.write(async () => {
-  const someChapter = await database.get('chapters').find(chapterId)
-  await someChapter.update((chapter) => {
-    chapter.isSpam = true
+  const chapter = await database.get('chapters').find(chapterId)
+
+  await chapter.update((record) => {
+    record.title = 'New chapter title'
   })
 })
 ```
 
-Or by defining a `@writer` method on a Model:
+### Model writer
 
-```js
+```ts
 import { writer } from '@hypertill/db/decorators'
 
-class Chapter extends Model {
-  // (...)
-  @writer async markAsSpam() {
-    await this.update(chapter => {
-      chapter.isSpam = true
+class Book extends Model {
+  @writer async rename(title: string) {
+    await this.update((book) => {
+      book.title = title
     })
   }
 }
 ```
 
-**➡️ Learn more:** [Writers](./Writers.md)
+See [Writers](./Writers) for batching and reader/writer details.
 
-### Create a new record
+## Create
 
-```js
-const newBook = await database.get('books').create(book => {
-  book.title = 'New book'
-  book.author = 'Unknown'
+```ts
+const newBook = await database.write(async () => {
+  return database.get('books').create((book) => {
+    book.title = 'Deep Work'
+    book.author = 'Cal Newport'
+    book.status = 'reading'
+  })
 })
 ```
 
-`.create()` takes a "builder function". In the example above, the builder will get a `Book` object as an argument. Use this object to set values for [fields you defined](./Model.md).
+Only set model fields inside the `create()` builder.
 
-**Note:** Always `await` the Promise returned by `create` before you access the created record.
+## Update
 
-**Note:** You can only set fields inside `create()` or `update()` builder functions.
+```ts
+await database.write(async () => {
+  const book = await database.get('books').find(bookId)
 
-### Update a record
-
-```js
-await someBook.update(book => {
-  book.title = 'Updated title'
+  await book.update((record) => {
+    record.status = 'finished'
+  })
 })
 ```
 
-Like creating, updating takes a builder function, where you can use field setters.
+## Delete
 
-**Note:** Always `await` the Promise returned by `update` before you access the modified record.
+If you use sync, prefer soft deletes:
 
-### Delete a record
-
-There are two ways of deleting records: syncable (mark as deleted), and permanent.
-
-If you only use Hypertill as a local database, destroy records permanently, if you [synchronize](./Sync/Intro.md), mark as deleted instead.
-
-```js
-await someBook.markAsDeleted() // syncable
-await someBook.destroyPermanently() // permanent
+```ts
+await database.write(async () => {
+  const book = await database.get('books').find(bookId)
+  await book.markAsDeleted()
+})
 ```
 
-**Note:** Do not access, update, or observe records after they're deleted.
+If the record should be removed immediately and permanently:
+
+```ts
+await database.write(async () => {
+  const book = await database.get('books').find(bookId)
+  await book.destroyPermanently()
+})
+```
+
+Do not keep using a record after it has been deleted.
+
+## Counts and observation
+
+When you need a live count, use `Query.observeCount()` instead of loading a whole list only to count it in memory:
+
+```ts
+const chapterCount$ = database.get('chapters').query(
+  Q.where('book_id', bookId),
+).observeCount()
+```
+
+For React-specific count patterns, [Components](./Components) shows the `withObservables` version.
 
 ## Advanced
 
-- `Model.observe()` - usually you only use this [when connecting records to components](./Components.md), but you can manually observe a record outside of React components. The returned [RxJS](https://github.com/reactivex/rxjs) `Observable` will emit the record immediately upon subscription, and then every time the record is updated. If the record is deleted, the Observable will complete.
-- `Query.observe()`, `Relation.observe()` — analagous to the above, but for [Queries](./Query.md) and [Relations](./Relation.md)
-- `Query.observeWithColumns()` - used for [sorted lists](./Components.md)
-- `Collection.findAndObserve(id)` — same as using `.find(id)` and then calling `record.observe()`
-- `Model.prepareUpdate()`, `Collection.prepareCreate`, `Database.batch` — used for [batch updates](./Writers.md)
-- `Database.unsafeResetDatabase()` destroys the whole database - [be sure to see this comment before using it](https://github.com/helapoint/hypertill-db/blob/22188ee5b6e3af08e48e8af52d14e0d90db72925/src/Database/index.js#L131)
-- To override the `record.id` during the creation, e.g. to sync with a remote database, you can do it by `record._raw` property. Be aware that the `id` must be of type `string`.
-    ```js
-    await database.get('books').create(book => {
-      book._raw.id = serverId
-    })
-    ```
+- `Model.observe()` observes one record
+- `Query.observe()` observes a list
+- `Query.observeWithColumns()` keeps sorted lists reactive when sort columns change
+- `Collection.findAndObserve(id)` is a convenient single-record observable
+- `Collection.prepareCreate()`, `Model.prepareUpdate()`, and `Database.batch()` are the building blocks for batched writes
+- `Database.unsafeResetDatabase()` clears the whole database and should be treated as an escape hatch
 
-### Advanced: Unsafe raw execute
+If you need to set a server-provided id during creation, use `_raw.id` inside the create builder:
 
-⚠️ Do not use this if you don't know what you're doing...
-
-There is an escape hatch to drop down from Hypertill DB to underlying database level to execute arbitrary commands. Use as a last resort tool:
-
-```js
-await database.write(() => {
-  // sqlite:
-  await database.adapter.unsafeExecute({
-    sqls: [
-      // [sql_query, [placeholder arguments, ...]]
-      ['create table temporary_test (id, foo, bar)', []],
-      ['insert into temporary_test (id, foo, bar) values (?, ?, ?)', ['t1', true, 3.14]],
-    ]
-  })
-
-  // lokijs:
-  await database.adapter.unsafeExecute({
-    loki: loki => {
-      loki.addCollection('temporary_test', { unique: ['id'], indices: [], disableMeta: true })
-      loki.getCollection('temporary_test').insert({ id: 't1', foo: true, bar: 3.14 })
-    }
+```ts
+await database.write(async () => {
+  await database.get('books').create((book) => {
+    book._raw.id = serverId
+    book.title = 'Imported title'
+    book.author = 'Server author'
+    book.status = 'reading'
   })
 })
 ```
 
-* * *
+## Unsafe raw execute
+
+There is also an escape hatch to drop down to the underlying adapter:
+
+```ts
+await database.write(async () => {
+  await database.adapter.unsafeExecute({
+    sqls: [
+      ['create table temporary_test (id, foo, bar)', []],
+      ['insert into temporary_test (id, foo, bar) values (?, ?, ?)', ['t1', true, 3.14]],
+    ],
+  })
+})
+```
+
+Use this only when the standard model and query APIs genuinely cannot express what you need.
 
 ## Next steps
 
-➡️ Now that you can create and update records, [**connect them to React components**](./Components.md)
+Once you can create and update records, connect them to React in [Components](./Components).

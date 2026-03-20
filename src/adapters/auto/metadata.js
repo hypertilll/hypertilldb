@@ -1,16 +1,24 @@
 // @flow
 
-import { appSchema, tableSchema, type AppSchema } from '../../Schema'
+import {
+  appSchema,
+  columnName,
+  tableSchema,
+  type AppSchema,
+  type ColumnSchema,
+  type TableName,
+} from '../../Schema'
 
-const METADATA_COLUMNS = [
-  { name: 'deleted_at', type: 'number', isOptional: true },
-  { name: 'created_tz', type: 'string', isOptional: true },
-  { name: 'updated_tz', type: 'string', isOptional: true },
-  { name: 'deleted_tz', type: 'string', isOptional: true },
+const METADATA_COLUMNS: ColumnSchema[] = [
+  { name: columnName('deleted_at'), type: 'number', isOptional: true },
+  { name: columnName('created_tz'), type: 'string', isOptional: true },
+  { name: columnName('updated_tz'), type: 'string', isOptional: true },
+  { name: columnName('deleted_tz'), type: 'string', isOptional: true },
 ]
 
 export function withDefaultMetadataColumns(schema: AppSchema): AppSchema {
-  const tableList = Object.keys(schema.tables).map((tableName) => {
+  const tableNames: TableName<any>[] = (Object.keys(schema.tables): any)
+  const tableList = tableNames.map((tableName) => {
     const table = schema.tables[tableName]
     const columns = table.columnArray.slice()
     METADATA_COLUMNS.forEach((column) => {

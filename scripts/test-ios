@@ -1,6 +1,44 @@
 #!/bin/bash
 
 set -x
-set -e
+set -euo pipefail
 
-xcodebuild -workspace native/iosTest/HypertillTester.xcworkspace -scheme 'HypertillTester' -destination 'name=iPhone 16,OS=18.1' test
+WORKSPACE='native/iosTest/HypertillTester.xcworkspace'
+SCHEME='HypertillTester'
+
+resolve_destination() {
+  if [[ -n "${IOS_DESTINATION:-}" ]]; then
+    printf '%s\n' "$IOS_DESTINATION"
+    return 0
+  fi
+
+  local destinations
+  destinations="$(xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations 2>/dev/null || true)"
+
+  local preferred_destination
+  preferred_destination="$(
+    printf '%s\n' "$destinations" | awk '
+      /Available destinations for the/ { available = 1; next }
+      /Ineligible destinations for the/ { available = 0 }
+      available && /platform:iOS Simulator/ && $0 !~ /Any iOS Simulator Device/ {
+        if (match($0, /id:[^,}]+/)) {
+          spec = substr($0, RSTART, RLENGTH)
+          gsub(/:/, "=", spec)
+          print spec
+          exit
+        }
+      }
+    '
+  )"
+
+  if [[ -n "$preferred_destination" ]]; then
+    printf '%s\n' "$preferred_destination"
+    return 0
+  fi
+
+  printf '%s\n' 'platform=iOS Simulator'
+}
+
+DESTINATION="$(resolve_destination)"
+
+xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" test

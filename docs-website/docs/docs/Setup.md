@@ -5,18 +5,19 @@ hide_title: true
 
 # Set up your app for Hypertill DB
 
-The current recommendation is to keep your database code in a dedicated `db/` folder and make the file layout obvious:
+The cleanest structure is still the best one: keep database code in a dedicated `db/` folder and keep UI code out of it.
 
 ```text
 src/
   db/
     schema.ts
     models.ts
-    database.ts
+    migrations.ts
+    index.ts
   App.tsx
 ```
 
-The examples below use TypeScript and a simple book-reader domain because that matches the shipped Expo reference app.
+The examples below use a small library app with `Book` and `Chapter` models. The rest of the docs reuse that same example so the API stays easy to follow.
 
 ## 1. Define your schema
 
@@ -34,6 +35,7 @@ export const schema = appSchema({
         { name: 'title', type: 'string' },
         { name: 'author', type: 'string' },
         { name: 'status', type: 'string' },
+        { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ],
     }),
@@ -43,6 +45,7 @@ export const schema = appSchema({
         { name: 'book_id', type: 'string', isIndexed: true },
         { name: 'title', type: 'string' },
         { name: 'position', type: 'number' },
+        { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ],
     }),
@@ -50,9 +53,9 @@ export const schema = appSchema({
 })
 ```
 
-If you need migrations, add them in a separate `migrations.ts` file and pass them to the adapter later.
+If you need migrations, keep them in `src/db/migrations.ts` and pass them to the adapter in the next step.
 
-## 2. Define models
+## 2. Define your models
 
 Create `src/db/models.ts`:
 
@@ -69,6 +72,7 @@ export class Book extends Model {
   @text('title') title!: string
   @text('author') author!: string
   @text('status') status!: string
+  @field('created_at') createdAt!: number
   @field('updated_at') updatedAt!: number
   @children('chapters') chapters!: Query<Chapter>
 }
@@ -82,6 +86,7 @@ export class Chapter extends Model {
   @field('book_id') bookId!: string
   @text('title') title!: string
   @field('position') position!: number
+  @field('created_at') createdAt!: number
   @field('updated_at') updatedAt!: number
   @relation('books', 'book_id') book!: Relation<Book>
 }
@@ -91,20 +96,16 @@ export const modelClasses = [Book, Chapter]
 
 ## 3. Create the database
 
-Create `src/db/database.ts`:
+Create `src/db/index.ts`:
 
 ```ts
-import { Database } from '@hypertill/db'
-import SQLiteAdapter from '@hypertill/db/adapters/sqlite'
+import { createPlatformAdapter, Database } from '@hypertill/db'
 import { modelClasses } from './models'
 import { schema } from './schema'
 
-const adapter = new SQLiteAdapter({
+const adapter = createPlatformAdapter({
   schema,
-  jsi: true,
-  onSetUpError: (error) => {
-    console.error('Hypertill DB setup failed', error)
-  },
+  dbName: 'library',
 })
 
 export const database = new Database({
@@ -113,7 +114,14 @@ export const database = new Database({
 })
 ```
 
-For web targets, swap `SQLiteAdapter` for `LokiJSAdapter` and keep the rest of the bootstrap pattern the same.
+`createPlatformAdapter()` is the current recommended bootstrap:
+
+- native and Node.js targets use SQLite
+- web targets use LokiJS
+- default metadata columns are injected for you
+
+If you need lower-level adapter options, pass them through `sqlite` or `loki` inside `createPlatformAdapter(...)`.
+If you have a `migrations.ts` file, pass it as `migrations` in the same object.
 
 ## 4. Provide the database to React
 
@@ -121,27 +129,32 @@ Wrap your app once in `DatabaseProvider`:
 
 ```tsx
 import { DatabaseProvider } from '@hypertill/db/react'
-import { database } from './src/db/database'
-import { BookReaderScreen } from './src/BookReaderScreen'
+import { database } from './src/db'
+import { LibraryScreen } from './src/LibraryScreen'
 
 export default function App() {
   return (
     <DatabaseProvider database={database}>
-      <BookReaderScreen />
+      <LibraryScreen />
     </DatabaseProvider>
   )
 }
 ```
 
-## 5. Keep reads and writes separate
+## 5. Use the current React split
 
-At this point, your app is ready for:
+At this point your app is ready for the package's current React pattern:
 
-- reactive reads via `hooks` (`hooks.use<Model>`, `hooks.use<Models>`, `hooks.use<Models>Advanced`)
-- writes and imperative lookups via `useDatabase`
-- advanced compositions via `withObservables` when needed
+- reactive reads with `hooks`
+- writes and imperative work with `useDatabase`
+- custom reactive composition with `withObservables` when the hooks are not enough
 
-That split is the current recommended React pattern for `0.0.3`. Continue with [Connecting Components](./Components).
+Hook names are generated from your model class names:
+
+- `Book` gives you `hooks.useBook()` and `hooks.useBooks()`
+- `Chapter` gives you `hooks.useChapter()` and `hooks.useChapters()`
+
+Continue with [Connecting Components](./Components) for the React side.
 
 ## Related guides
 

@@ -1,220 +1,213 @@
 # Model
 
-A **Model** class represents a type of thing in your app. For example, `Book`, `Chapter`, `Note`.
+A `Model` class is the application-facing shape of one table in your database.
 
-Before defining a Model, make sure you [defined its schema](./Schema.md).
+In the library example used throughout the docs:
 
-## Create a Model
+- `Book` maps to the `books` table
+- `Chapter` maps to the `chapters` table
 
-Let's define the `Book` model:
+Before defining a model, make sure the matching table already exists in your [Schema](./Schema.md).
 
-```js
-// db/Book.ts
+## Start with the table name
+
+```ts
 import { Model } from '@hypertill/db'
 
-export default class Book extends Model {
+export class Book extends Model {
   static table = 'books'
 }
 ```
 
-Specify the table name for this Model — the same you defined [in the schema](./Schema.md).
+Then include that model when you create the database:
 
-Now add the new Model to `Database`:
-
-```js
-// index.js
-import Book from './db/Book'
-
+```ts
 const database = new Database({
-  // ...
+  adapter,
   modelClasses: [Book],
 })
 ```
 
-### Associations
+## Add associations
 
-Many models relate to one another. A `Book` has many `Chapter`s. And every `Chapter` belongs to a `Book`. (Every relation is double-sided). Define those associations like so:
+Relations are always defined on both sides.
 
-```js
-class Book extends Model {
+```ts
+export class Book extends Model {
   static table = 'books'
   static associations = {
     chapters: { type: 'has_many', foreignKey: 'book_id' },
-  }
+  } as const
 }
 
-class Chapter extends Model {
+export class Chapter extends Model {
   static table = 'chapters'
   static associations = {
     books: { type: 'belongs_to', key: 'book_id' },
-  }
+  } as const
 }
 ```
 
-On the "child" side (`chapters`) you define a `belongs_to` association, and pass a column name (key) that points to the parent (`book_id` is the ID of the book the chapter belongs to).
-
-On the "parent" side (`books`) you define an equivalent `has_many` association and pass the same column name (⚠️ note that the name here is `foreignKey`).
+- use `has_many` on the parent model
+- use `belongs_to` on the child model
+- both sides point at the same foreign key column
 
 ## Add fields
 
-Next, define the Model's _fields_ (properties). Those correspond to [table columns](./Schema.md) defined earlier in the schema.
+Fields map model properties to schema columns:
 
-```js
+```ts
 import { field, text } from '@hypertill/db/decorators'
 
-class Book extends Model {
+export class Book extends Model {
   static table = 'books'
-  static associations = {
-    chapters: { type: 'has_many', foreignKey: 'book_id' },
-  }
 
-  @text('title') title
-  @text('author') author
-  @text('status') status
+  @text('title') title!: string
+  @text('author') author!: string
+  @text('status') status!: string
+  @field('created_at') createdAt!: number
+  @field('updated_at') updatedAt!: number
 }
 ```
 
-Fields are defined using ES6 decorators. Pass **column name** you defined in Schema as the argument to `@field`.
+### `@text` vs `@field`
 
-**Field types**. Fields are guaranteed to be the same type (string/number/boolean) as the column type defined in Schema. If column is marked `isOptional: true`, fields may also be null.
+- use `@text` for user-entered strings like titles and names
+- use `@field` for numbers, booleans, ids, and plain scalar values
 
-**User text fields**. For fields that contain arbitrary text specified by the user (e.g. names, titles, chapter notes), use `@text` - a simple extension of `@field` that also trims whitespace.
+The column name stays explicit on purpose, because database columns are usually `snake_case` while application properties are usually camelCase.
 
-**Note:** Why do I have to type the field/column name twice? The database convention is to use `snake_case` for names, and the JavaScript convention is to use camelCase. So for any multi-word name, the two differ. Also, for resiliency, we believe it's better to be explicit, because over time, you might want to refactor how you name your JavaScript field names, but column names must stay the same for backward compatibility.
+## Date fields
 
-### Date fields
+If you store timestamps and want a JavaScript `Date` in the model, use `@date`:
 
-For date fields, use `@date` instead of `@field`. This will return a JavaScript `Date` object (instead of Unix timestamp integer).
-
-```js
+```ts
 import { date } from '@hypertill/db/decorators'
 
 class Book extends Model {
-  // ...
-  @date('last_event_at') lastEventAt
+  @date('last_opened_at') lastOpenedAt!: Date | null
 }
 ```
 
-### Derived fields
+That assumes your schema contains:
 
-Use ES6 getters to define model properties that can be calculated based on database fields:
-
-```js
-import { field, text } from '@hypertill/db/decorators'
-
-class Book extends Model {
-  static table = 'books'
-
-  @date('archived_at') archivedAt
-
-  get isRecentlyArchived() {
-    // in the last 7 days
-    return this.archivedAt &&
-      this.archivedAt.getTime() > Date.now() - 7 * 24 * 3600 * 1000
-  }
-}
+```ts
+{ name: 'last_opened_at', type: 'number', isOptional: true }
 ```
 
-### To-one relation fields
+## To-one relations
 
-To point to a related record, e.g. `Book` a `Chapter` belongs to, use `@relation` or `@immutableRelation`:
+Use `@relation` or `@immutableRelation` when a record belongs to another record:
 
-```js
+```ts
+import type { Relation } from '@hypertill/db'
 import { relation, immutableRelation } from '@hypertill/db/decorators'
 
 class Chapter extends Model {
-  // ...
-  @relation('books', 'book_id') book
-  @immutableRelation('libraries', 'library_id') library
+  @relation('books', 'book_id') book!: Relation<Book>
+}
+
+class ShelfEntry extends Model {
+  @immutableRelation('books', 'book_id') book!: Relation<Book>
 }
 ```
 
-**➡️ Learn more:** [Relation API](./Relation.md)
+Use `@immutableRelation` when the foreign key should never change after creation.
 
-### Children (to-many relation fields)
+## To-many relations with `@children`
 
-To point to a list of records that belong to this Model, e.g. all `Chapter`s that belong to a `Book`, you can define a simple `Query` using `@children`:
+Use `@children` to expose a query for related rows:
 
-```js
+```ts
+import { Query } from '@hypertill/db'
 import { children } from '@hypertill/db/decorators'
 
 class Book extends Model {
-  static table = 'books'
   static associations = {
     chapters: { type: 'has_many', foreignKey: 'book_id' },
-  }
+  } as const
 
-  @children('chapters') chapters
+  @children('chapters') chapters!: Query<Chapter>
 }
 ```
 
-Pass the _table name_ of the related records as an argument to `@children`. The resulting property will be a `Query` you can fetch, observe, or count.
+`@children('chapters')` does not load rows immediately. It gives you a `Query`, which you can fetch, observe, extend, or count.
 
-**Note:** You must define a `has_many` association in `static associations` for this to work
+## Custom queries
 
-**➡️ Learn more:** [Queries](./Query.md)
+You can build model-level queries with `@lazy`:
 
-### Custom Queries
-
-In addition to `@children`, you can define custom Queries or extend existing ones, for example:
-
-```js
-import { children } from '@hypertill/db/decorators'
+```ts
 import { Q } from '@hypertill/db'
+import { children, lazy } from '@hypertill/db/decorators'
 
 class Book extends Model {
-  static table = 'books'
-  static associations = {
-    chapters: { type: 'has_many', foreignKey: 'book_id' },
-  }
+  @children('chapters') chapters!: Query<Chapter>
 
-  @children('chapters') chapters
-  @lazy reviewedChapters = this.chapters.extend(
-    Q.where('is_verified', true)
+  @lazy introChapters = this.chapters.extend(
+    Q.where('title', Q.like('%Intro%')),
+    Q.sortBy('position', Q.asc),
   )
 }
 ```
 
-**➡️ Learn more:** [Queries](./Query.md)
+Use `@lazy` for derived queries so they are created once and reused.
 
-### Writer methods
+## Writer methods
 
-Define **writers** to simplify creating and updating records, for example:
+Put repeated mutations on the model itself:
 
-```js
+```ts
 import { writer } from '@hypertill/db/decorators'
 
-class Chapter extends Model {
-  static table = 'chapters'
-
-  @field('is_spam') isSpam
-
-  @writer async markAsSpam() {
-    await this.update(chapter => {
-      chapter.isSpam = true
+class Book extends Model {
+  @writer async rename(title: string) {
+    await this.update((book) => {
+      book.title = title
     })
   }
 }
 ```
 
-Methods must be marked as `@writer` to be able to modify the database.
+Methods that change the database should be marked `@writer`.
 
-**➡️ Learn more:** [Writers](./Writers.md)
+## A complete small example
 
-## Advanced fields
+```ts
+import { Model, Query, Relation } from '@hypertill/db'
+import { children, field, relation, text } from '@hypertill/db/decorators'
 
-You can also use these decorators:
+export class Book extends Model {
+  static table = 'books'
+  static associations = {
+    chapters: { type: 'has_many', foreignKey: 'book_id' },
+  } as const
 
-- `@json` for complex serialized data
-- `@readonly` to make the field read-only
-- `@nochange` to disallow changes to the field _after the first creation_
+  @text('title') title!: string
+  @text('author') author!: string
+  @text('status') status!: string
+  @field('created_at') createdAt!: number
+  @field('updated_at') updatedAt!: number
+  @children('chapters') chapters!: Query<Chapter>
+}
 
-And you can make observable compound properties using RxJS...
+export class Chapter extends Model {
+  static table = 'chapters'
+  static associations = {
+    books: { type: 'belongs_to', key: 'book_id' },
+  } as const
 
-**➡️ Learn more:** [Advanced fields](./Advanced/AdvancedFields.md)
+  @field('book_id') bookId!: string
+  @text('title') title!: string
+  @field('position') position!: number
+  @field('created_at') createdAt!: number
+  @field('updated_at') updatedAt!: number
+  @relation('books', 'book_id') book!: Relation<Book>
+}
 
-* * *
+export const modelClasses = [Book, Chapter]
+```
 
 ## Next steps
 
-➡️ After you define some Models, learn the [**Create / Read / Update / Delete API**](./CRUD.md)
+After defining your models, move on to [CRUD](./CRUD) and [Query](./Query).

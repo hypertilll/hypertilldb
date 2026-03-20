@@ -1,16 +1,16 @@
 # Schema
 
-When using Hypertill DB, you're dealing with **Models** and **Collections**. However, underneath Hypertill sits an **underlying database** (SQLite or LokiJS) which speaks a different language: **tables and columns**. Together, those are called a **database schema** and we must define it first.
+Hypertill DB works with `Model`s and `Collection`s in application code, but underneath that it still stores data in database tables and columns. Your schema is where you define that structure.
 
-## Defining a Schema
+## Defining a schema
 
-Say you want Models `Book`, `Chapter` in your app. For each of those Models, you define a table. And for every field of a Model (e.g. title of the book, chapter position) you define a column. For example:
+Here is the same small library example used across the docs:
 
-```js
-// db/schema.ts
+```ts
+// src/db/schema.ts
 import { appSchema, tableSchema } from '@hypertill/db'
 
-export const mySchema = appSchema({
+export const schema = appSchema({
   version: 1,
   tables: [
     tableSchema({
@@ -19,8 +19,9 @@ export const mySchema = appSchema({
         { name: 'title', type: 'string' },
         { name: 'author', type: 'string' },
         { name: 'status', type: 'string' },
+        { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
-      ]
+      ],
     }),
     tableSchema({
       name: 'chapters',
@@ -28,116 +29,122 @@ export const mySchema = appSchema({
         { name: 'book_id', type: 'string', isIndexed: true },
         { name: 'title', type: 'string' },
         { name: 'position', type: 'number' },
+        { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
-      ]
-    }),
-  ]
-})
-```
-
-**Note:** It is database convention to use plural and snake_case names for table names. Column names are also snake_case. So `Book` becomes `books` and `createdAt` becomes `created_at`.
-When you use `createPlatformAdapter`, Hypertill DB automatically injects metadata columns (`deleted_at`, `created_tz`, `updated_tz`, `deleted_tz`) so you do not have to declare them in schema.
-
-### Column types
-
-Columns have one of three types: `string`, `number`, or `boolean`.
-
-Fields of those types will default to `''`, `0`, or `false` respectively, if you create a record with a missing field.
-
-To allow fields to be `null`, mark the column as `isOptional: true`.
-
-### Naming conventions
-
-To add a relation to a table (e.g. `Book` for a `Chapter`), add a string column ending with `_id`:
-
-```js
-{ name: 'book_id', type: 'string' },
-{ name: 'author_id', type: 'string' },
-```
-
-Boolean columns should have names starting with `is_`:
-
-```js
-{ name: 'is_pinned', type: 'boolean' }
-```
-
-Date fields should be `number` (dates are stored as Unix timestamps) and have names ending with `_at`:
-
-```js
-{ name: 'last_seen_at', type: 'number', isOptional: true }
-```
-
-### Special columns
-
-All tables _automatically_ have a string column `id` (of `string` type) to uniquely identify records -- therefore you cannot declare a column named `id` yourself. (There are also special `_status` and `_changed` columns used for [synchronization](./Sync/Intro.md) - you shouldn't touch them yourself).
-
-You can add special `created_at` / `updated_at` columns to enable [automatic create/update tracking](./Advanced/CreateUpdateTracking.md).
-
-### Modifying Schema
-
-Hypertill cannot automatically detect Schema changes. Therefore, whenever you change the Schema, you must increment its version number (`version:` field).
-
-During early development, this is all you need to do - on app reload, this will cause the database to be cleared completely.
-
-To seamlessly update the schema (without deleting user data), use [Migrations](./Advanced/Migrations.md).
-
-⚠️ Always use Migrations if you already shipped your app.
-
-### Indexing
-
-To enable database indexing, add `isIndexed: true` to a column.
-
-Indexing makes querying by a column faster, at the expense of create/update speed and database size.
-
-For example, if you often query all chapters belonging to a book (that is, query chapters by its `book_id` column), you should mark the `book_id` column as indexed.
-
-However, if you rarely query all books by an author, indexing `author_id` is probably not worth it.
-
-In general, most `_id` fields are indexed. Occasionally, `boolean` fields are worth indexing (but it's a "low quality index"). However, you should almost never index date (`_at`) columns or `string` columns. You definitely do not want to index long-form user text.
-
-⚠️ Do not mark all columns as indexed to "make Hypertill faster". Indexing has a real performance cost and should be used only when appropriate.
-
-## Advanced
-
-### Unsafe SQL schema
-
-If you want to modify the SQL used to set up the SQLite database, you can pass `unsafeSql` parameter
-to `tableSchema` and `appSchema`. This parameter is a function that receives SQL generated by Hypertill,
-and you can return whatever you want - so you can append, prepend, replace parts of SQL, or return
-your own SQL altogether. When passed to `tableSchema`, it receives SQL generated for just that table,
-and when to `appSchema` - the entire schema SQL.
-
-⚠️  Note that SQL generated by Hypertill DB is not considered to be a stable API, so be careful about your transforms as they can break at any time.
-
-```js
-appSchema({
-  ...
-  tables: [
-    tableSchema({
-      name: 'tasks',
-      columns: [...],
-      unsafeSql: sql => sql.replace(/create table [^)]+\)/, '$& without rowid'),
+      ],
     }),
   ],
-  unsafeSql: (sql, kind) => {
-    // Note that this function is called not just when first setting up the database
-    // Additionally, when running very large batches, all database indices may be dropped and later
-    // recreated as an optimization. More kinds may be added in the future.
-    switch (kind) {
-      case 'setup':
-        return `create blabla;${sql}`
-      case 'create_indices':
-      case 'drop_indices':
-        return sql
-      default:
-        throw new Error('unexpected unsafeSql kind')
-    }
-  },
 })
 ```
 
-* * *
+## Naming conventions
+
+Hypertill DB follows database naming conventions:
+
+- table names are plural and `snake_case`
+- column names are also `snake_case`
+- model class names stay in JavaScript or TypeScript style
+
+That means:
+
+- `Book` maps to `books`
+- `createdAt` maps to `created_at`
+
+## Column types
+
+Columns can be:
+
+- `string`
+- `number`
+- `boolean`
+
+If you want a field to allow `null`, mark the column as `isOptional: true`.
+
+## Relation columns
+
+To point one table at another, add a string column ending in `_id`:
+
+```ts
+{ name: 'book_id', type: 'string' }
+{ name: 'author_id', type: 'string' }
+```
+
+That column is what `@relation()` or `@immutableRelation()` will use on the model side.
+
+## Timestamp columns
+
+If you add `created_at` and `updated_at`, Hypertill DB can keep them current during create and update operations.
+
+They also make the default React query helpers more useful:
+
+- list hooks use `updated_at` first for sorting and timeframe filtering
+- if `updated_at` is missing, they fall back to `created_at`
+
+## Metadata columns
+
+When you bootstrap with `createPlatformAdapter()`, Hypertill DB automatically injects these metadata columns:
+
+- `deleted_at`
+- `created_tz`
+- `updated_tz`
+- `deleted_tz`
+
+You do not need to declare those manually.
+
+## Special columns
+
+Every table automatically has:
+
+- `id`
+- `_status`
+- `_changed`
+
+Do not declare those yourself.
+
+`id` is the record identifier. `_status` and `_changed` are used internally for sync.
+
+## Modifying schema
+
+Whenever you change your schema, increase its `version`.
+
+During early development that is often enough, because a version change can reset the local database on reload. Once your app is shipped, use [Migrations](./Advanced/Migrations.md) instead.
+
+## Indexing
+
+Use `isIndexed: true` when you query a column frequently.
+
+Good candidates:
+
+- foreign keys like `book_id`
+- a few selective boolean flags
+
+Usually poor candidates:
+
+- large free-text fields
+- most timestamp fields
+- every column "just in case"
+
+Indexing improves reads for specific queries, but it also costs write performance and disk space.
+
+## Advanced: unsafe SQL
+
+If you need to customize the generated SQLite schema, `appSchema()` and `tableSchema()` both support `unsafeSql`.
+
+Use it carefully. It is an escape hatch, not the normal path.
+
+```ts
+appSchema({
+  version: 1,
+  tables: [
+    tableSchema({
+      name: 'books',
+      columns: [...],
+      unsafeSql: (sql) => sql.replace(/create table [^)]+\)/, '$& without rowid'),
+    }),
+  ],
+})
+```
 
 ## Next steps
 
-➡️ After you define your schema, go ahead and [**define your Models**](./Model.md)
+After the schema is in place, define your [Model](./Model) classes.

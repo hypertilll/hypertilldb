@@ -14,7 +14,7 @@ import type { DatabaseAdapter, BatchOperation } from '../adapters/type'
 import DatabaseAdapterCompat from '../adapters/compat'
 import type Model from '../Model'
 import type Collection, { CollectionChangeSet } from '../Collection'
-import type { TableName, AppSchema } from '../Schema'
+import { columnName, type TableName, type AppSchema, type TableSchema } from '../Schema'
 
 import CollectionMap from './CollectionMap'
 import type LocalStorage from './LocalStorage'
@@ -31,6 +31,8 @@ type DatabaseProps = $Exact<{
     timezoneSource?: 'device' | 'utc' | string,
   }>,
 }>
+
+declare var globalThis: any
 
 let experimentalAllowsFatalError = false
 
@@ -51,6 +53,10 @@ function getCrypto(): any {
   }
 
   return null
+}
+
+function hasColumn(tableSchema: TableSchema, name: string): boolean {
+  return Boolean(tableSchema.columns[columnName(name)])
 }
 
 function fillRandomBytes(bytes: Uint8Array): void {
@@ -287,7 +293,7 @@ export default class Database {
         changeType = 'created'
       } else if (preparedState === 'markAsDeleted') {
         const tableSchema = this.schema.tables[table]
-        if (tableSchema && (tableSchema.columns.deleted_at || tableSchema.columns.deleted_tz)) {
+        if (tableSchema && (hasColumn(tableSchema, 'deleted_at') || hasColumn(tableSchema, 'deleted_tz'))) {
           batchOperations.push(['update', table, raw])
         } else {
           batchOperations.push(['markAsDeleted', table, id])
