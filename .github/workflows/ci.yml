@@ -3,9 +3,16 @@ name: CI
 on:
   pull_request:
   push:
-    branches: main
+    branches: [main]
 
 jobs:
+  gradle-wrapper-validation:
+    runs-on: ubuntu-22.04
+    name: Gradle wrapper validation
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gradle Wrapper Validation
+        uses: gradle/actions/wrapper-validation@v4
   ci-check:
     runs-on: ubuntu-22.04
     name: JavaScript tests
@@ -24,8 +31,6 @@ jobs:
           key: ${{ runner.os }}-node-${{ matrix.node-version }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn
       - run: yarn ci:check
-      - name: Gradle Wrapper Validation
-        uses: gradle/wrapper-validation-action@v1.0.6
       - name: Check docs build
         run: cd docs-website && yarn install && cd .. && yarn docs:build
   ios:
@@ -59,6 +64,11 @@ jobs:
       - name: 'pod install'
         if: true # steps.pods-cache.outputs.cache-hit != 'true'
         run: yarn cocoapods
+      - name: Install iOS platform support
+        run: |
+          sudo xcodebuild -downloadPlatform iOS
+          xcrun simctl list runtimes
+          xcrun simctl list devices available
       - run: yarn test:ios
   android:
     runs-on: ubuntu-24.04
