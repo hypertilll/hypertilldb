@@ -9,8 +9,6 @@
 /* Begin PBXBuildFile section */
 		13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB11A68108700A75B9A /* LaunchScreen.xib */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		3BB55D30C40C85879E494BFE /* libPods-HypertillTester.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CD725A06C04B325CA2D73BF6 /* libPods-HypertillTester.a */; };
-		6DA7B7DA7B1522AA049DE511 /* libPods-HypertillTester-HypertillTesterTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F9A6D5BBBFBECCF18215C07F /* libPods-HypertillTester-HypertillTesterTests.a */; };
 		6E339A1D260CCC4500E44857 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E339A1C260CCC4500E44857 /* Accelerate.framework */; };
 		6E339A21260CCC6800E44857 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6E339A20260CCC6800E44857 /* XCTest.framework */; };
 		6ECAF1762212B9D000D06219 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6ECAF1752212B9D000D06219 /* JavaScriptCore.framework */; };
@@ -20,6 +18,8 @@
 		6ED5018C214550C20031A190 /* BridgeTestReporter.m in Sources */ = {isa = PBXBuildFile; fileRef = 6ED50164214550C20031A190 /* BridgeTestReporter.m */; };
 		6ED5018D214550C20031A190 /* BridgeTestReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ED5018B214550C20031A190 /* BridgeTestReporter.swift */; };
 		CCF2180453AF51C94AED142D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C4BFAE2B14005C3AEED18B65 /* PrivacyInfo.xcprivacy */; };
+		D2A1A99196E6EDD460F3A472 /* libPods-HypertillTester.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B6F6DE0AD66144C34CD6C6E0 /* libPods-HypertillTester.a */; };
+		E82F4521F4A929C1459D5496 /* libPods-HypertillTester-HypertillTesterTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A131E0B1B08946B39CF034B2 /* libPods-HypertillTester-HypertillTesterTests.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,12 +37,14 @@
 		00E356EE1AD99517003FC87E /* HypertillTesterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HypertillTesterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0A79C91DD4C3201F28E3EE33 /* Pods-HypertillTesterTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HypertillTesterTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-HypertillTesterTests/Pods-HypertillTesterTests.debug.xcconfig"; sourceTree = "<group>"; };
-		0FA83F6BA06D10FFEC899F36 /* Pods-HypertillTester-HypertillTesterTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HypertillTester-HypertillTesterTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-HypertillTester-HypertillTesterTests/Pods-HypertillTester-HypertillTesterTests.release.xcconfig"; sourceTree = "<group>"; };
+		0FA83F6BA06D10FFEC899F36 /* Pods-WatermelonTester-WatermelonTesterTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WatermelonTester-WatermelonTesterTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-WatermelonTester-WatermelonTesterTests/Pods-WatermelonTester-WatermelonTesterTests.release.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* HypertillTester.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HypertillTester.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB21A68108700A75B9A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1D16EB823DC83A9090A99B84 /* Pods-HypertillTester-HypertillTesterTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HypertillTester-HypertillTesterTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-HypertillTester-HypertillTesterTests/Pods-HypertillTester-HypertillTesterTests.debug.xcconfig"; sourceTree = "<group>"; };
 		2D16E6891FA4F8E400B85C8A /* libReact.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libReact.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		31AD5AC95A8E56CCFAB276F6 /* Pods-HypertillTester.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HypertillTester.release.xcconfig"; path = "Pods/Target Support Files/Pods-HypertillTester/Pods-HypertillTester.release.xcconfig"; sourceTree = "<group>"; };
 		4AD1A2FF035C6D8230E674A2 /* Pods-HypertillTesterTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HypertillTesterTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-HypertillTesterTests/Pods-HypertillTesterTests.release.xcconfig"; sourceTree = "<group>"; };
 		6E339A1C260CCC4500E44857 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		6E339A20260CCC6800E44857 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -54,12 +56,14 @@
 		6ED5013B2143FEE80031A190 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6ED50164214550C20031A190 /* BridgeTestReporter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BridgeTestReporter.m; sourceTree = "<group>"; };
 		6ED5018B214550C20031A190 /* BridgeTestReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BridgeTestReporter.swift; sourceTree = "<group>"; };
-		7548A08DEFEA057E0AB8C042 /* Pods-HypertillTester-HypertillTesterTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HypertillTester-HypertillTesterTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-HypertillTester-HypertillTesterTests/Pods-HypertillTester-HypertillTesterTests.debug.xcconfig"; sourceTree = "<group>"; };
-		A90F273F5BA305B1349074B2 /* Pods-HypertillTester.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HypertillTester.release.xcconfig"; path = "Pods/Target Support Files/Pods-HypertillTester/Pods-HypertillTester.release.xcconfig"; sourceTree = "<group>"; };
+		7548A08DEFEA057E0AB8C042 /* Pods-WatermelonTester-WatermelonTesterTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WatermelonTester-WatermelonTesterTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-WatermelonTester-WatermelonTesterTests/Pods-WatermelonTester-WatermelonTesterTests.debug.xcconfig"; sourceTree = "<group>"; };
+		A131E0B1B08946B39CF034B2 /* libPods-HypertillTester-HypertillTesterTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-HypertillTester-HypertillTesterTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A90F273F5BA305B1349074B2 /* Pods-WatermelonTester.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WatermelonTester.release.xcconfig"; path = "Pods/Target Support Files/Pods-WatermelonTester/Pods-WatermelonTester.release.xcconfig"; sourceTree = "<group>"; };
+		B6F6DE0AD66144C34CD6C6E0 /* libPods-HypertillTester.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-HypertillTester.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C4BFAE2B14005C3AEED18B65 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = ../PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		CD725A06C04B325CA2D73BF6 /* libPods-HypertillTester.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-HypertillTester.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		D0B14896BFD7C8D34D2F0FF5 /* Pods-HypertillTester.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HypertillTester.debug.xcconfig"; path = "Pods/Target Support Files/Pods-HypertillTester/Pods-HypertillTester.debug.xcconfig"; sourceTree = "<group>"; };
-		F9A6D5BBBFBECCF18215C07F /* libPods-HypertillTester-HypertillTesterTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-HypertillTester-HypertillTesterTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CF86692060560D9311264F88 /* Pods-HypertillTester.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HypertillTester.debug.xcconfig"; path = "Pods/Target Support Files/Pods-HypertillTester/Pods-HypertillTester.debug.xcconfig"; sourceTree = "<group>"; };
+		D0B14896BFD7C8D34D2F0FF5 /* Pods-WatermelonTester.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WatermelonTester.debug.xcconfig"; path = "Pods/Target Support Files/Pods-WatermelonTester/Pods-WatermelonTester.debug.xcconfig"; sourceTree = "<group>"; };
+		F99DA03D14F70268C3BF2651 /* Pods-HypertillTester-HypertillTesterTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-HypertillTester-HypertillTesterTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-HypertillTester-HypertillTesterTests/Pods-HypertillTester-HypertillTesterTests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,7 +72,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6E339A21260CCC6800E44857 /* XCTest.framework in Frameworks */,
-				6DA7B7DA7B1522AA049DE511 /* libPods-HypertillTester-HypertillTesterTests.a in Frameworks */,
+				E82F4521F4A929C1459D5496 /* libPods-HypertillTester-HypertillTesterTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,7 +82,7 @@
 			files = (
 				6E339A1D260CCC4500E44857 /* Accelerate.framework in Frameworks */,
 				6ECAF1762212B9D000D06219 /* JavaScriptCore.framework in Frameworks */,
-				3BB55D30C40C85879E494BFE /* libPods-HypertillTester.a in Frameworks */,
+				D2A1A99196E6EDD460F3A472 /* libPods-HypertillTester.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -127,8 +131,8 @@
 				6E339A1C260CCC4500E44857 /* Accelerate.framework */,
 				6ECAF1752212B9D000D06219 /* JavaScriptCore.framework */,
 				2D16E6891FA4F8E400B85C8A /* libReact.a */,
-				CD725A06C04B325CA2D73BF6 /* libPods-HypertillTester.a */,
-				F9A6D5BBBFBECCF18215C07F /* libPods-HypertillTester-HypertillTesterTests.a */,
+				B6F6DE0AD66144C34CD6C6E0 /* libPods-HypertillTester.a */,
+				A131E0B1B08946B39CF034B2 /* libPods-HypertillTester-HypertillTesterTests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -167,12 +171,16 @@
 		D67869B01EAB689ABFF3BA78 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				D0B14896BFD7C8D34D2F0FF5 /* Pods-HypertillTester.debug.xcconfig */,
-				A90F273F5BA305B1349074B2 /* Pods-HypertillTester.release.xcconfig */,
+				D0B14896BFD7C8D34D2F0FF5 /* Pods-WatermelonTester.debug.xcconfig */,
+				A90F273F5BA305B1349074B2 /* Pods-WatermelonTester.release.xcconfig */,
 				0A79C91DD4C3201F28E3EE33 /* Pods-HypertillTesterTests.debug.xcconfig */,
 				4AD1A2FF035C6D8230E674A2 /* Pods-HypertillTesterTests.release.xcconfig */,
-				7548A08DEFEA057E0AB8C042 /* Pods-HypertillTester-HypertillTesterTests.debug.xcconfig */,
-				0FA83F6BA06D10FFEC899F36 /* Pods-HypertillTester-HypertillTesterTests.release.xcconfig */,
+				7548A08DEFEA057E0AB8C042 /* Pods-WatermelonTester-WatermelonTesterTests.debug.xcconfig */,
+				0FA83F6BA06D10FFEC899F36 /* Pods-WatermelonTester-WatermelonTesterTests.release.xcconfig */,
+				CF86692060560D9311264F88 /* Pods-HypertillTester.debug.xcconfig */,
+				31AD5AC95A8E56CCFAB276F6 /* Pods-HypertillTester.release.xcconfig */,
+				1D16EB823DC83A9090A99B84 /* Pods-HypertillTester-HypertillTesterTests.debug.xcconfig */,
+				F99DA03D14F70268C3BF2651 /* Pods-HypertillTester-HypertillTesterTests.release.xcconfig */,
 			);
 			name = Pods;
 			sourceTree = "<group>";
@@ -446,7 +454,7 @@
 /* Begin XCBuildConfiguration section */
 		00E356F61AD99517003FC87E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7548A08DEFEA057E0AB8C042 /* Pods-HypertillTester-HypertillTesterTests.debug.xcconfig */;
+			baseConfigurationReference = 1D16EB823DC83A9090A99B84 /* Pods-HypertillTester-HypertillTesterTests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -475,7 +483,7 @@
 		};
 		00E356F71AD99517003FC87E /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0FA83F6BA06D10FFEC899F36 /* Pods-HypertillTester-HypertillTesterTests.release.xcconfig */;
+			baseConfigurationReference = F99DA03D14F70268C3BF2651 /* Pods-HypertillTester-HypertillTesterTests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -504,7 +512,7 @@
 		};
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D0B14896BFD7C8D34D2F0FF5 /* Pods-HypertillTester.debug.xcconfig */;
+			baseConfigurationReference = CF86692060560D9311264F88 /* Pods-HypertillTester.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CC = "$(SRCROOT)/../../scripts/ccache-clang";
@@ -539,7 +547,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A90F273F5BA305B1349074B2 /* Pods-HypertillTester.release.xcconfig */;
+			baseConfigurationReference = 31AD5AC95A8E56CCFAB276F6 /* Pods-HypertillTester.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CC = "$(SRCROOT)/../../scripts/ccache-clang";
@@ -574,6 +582,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CC = "";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -590,6 +599,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				CXX = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -610,11 +620,16 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD = "";
+				LDPLUSPLUS = "";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
@@ -626,6 +641,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CC = "";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -642,6 +658,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				CXX = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = i386;
@@ -658,10 +675,15 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD = "";
+				LDPLUSPLUS = "";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;

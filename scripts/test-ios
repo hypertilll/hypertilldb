@@ -1,6 +1,68 @@
 #!/bin/bash
 
 set -x
-set -e
+set -euo pipefail
 
-xcodebuild -workspace native/iosTest/HypertillTester.xcworkspace -scheme 'HypertillTester' -destination 'name=iPhone 16,OS=18.1' test
+WORKSPACE='native/iosTest/HypertillTester.xcworkspace'
+SCHEME='HypertillTester'
+
+resolve_destination() {
+  if [[ -n "${IOS_DESTINATION:-}" ]]; then
+    printf '%s\n' "$IOS_DESTINATION"
+    return 0
+  fi
+
+  local destinations
+  destinations="$(xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -showdestinations 2>&1 || true)"
+
+  local simulator_destination
+  simulator_destination="$(
+    printf '%s\n' "$destinations" | awk '
+      /Available destinations for the/ { available = 1; next }
+      /Ineligible destinations for the/ { available = 0 }
+      available && /platform:iOS Simulator/ && $0 !~ /Any iOS Simulator Device/ {
+        if (match($0, /id:[^,}]+/)) {
+          spec = substr($0, RSTART, RLENGTH)
+          gsub(/:/, "=", spec)
+          print spec
+          exit
+        }
+      }
+    '
+  )"
+
+  if [[ -n "$simulator_destination" ]]; then
+    printf '%s\n' "$simulator_destination"
+    return 0
+  fi
+
+  local mac_destination
+  mac_destination="$(
+    printf '%s\n' "$destinations" | awk '
+      /Available destinations for the/ { available = 1; next }
+      /Ineligible destinations for the/ { available = 0 }
+      available && /platform:macOS/ && /variant:Designed for \[iPad,iPhone\]/ {
+        if (match($0, /id:[^,}]+/)) {
+          spec = substr($0, RSTART, RLENGTH)
+          gsub(/:/, "=", spec)
+          print spec
+          exit
+        }
+      }
+    '
+  )"
+
+  if [[ -n "$mac_destination" ]]; then
+    printf '%s\n' "$mac_destination"
+    return 0
+  fi
+
+  printf '%s\n' "$destinations" >&2
+  printf '%s\n' \
+    'error: No concrete iOS test destination is available for HypertillTester. Set IOS_DESTINATION explicitly or install an iOS runtime for the selected Xcode version.' >&2
+  return 1
+}
+
+DESTINATION="$(resolve_destination)"
+
+xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -destination "$DESTINATION" test

@@ -12,12 +12,16 @@ import type { $RE } from '../types'
 import type Database from '../Database'
 import type Collection from '../Collection'
 import type CollectionMap from '../Database/CollectionMap'
-import { type TableName, type ColumnName, columnName } from '../Schema'
+import { type TableName, type ColumnName, type ColumnMap, columnName } from '../Schema'
 import type { Value } from '../QueryDescription'
 import { type RawRecord, type DirtyRaw, sanitizedRaw, setRawSanitized } from '../RawRecord'
 import { setRawColumnChange } from '../sync/helpers'
 
 import { createTimestampsFor, fetchDescendants } from './helpers'
+
+function hasColumn(columns: ColumnMap, name: string): boolean {
+  return Boolean(columns[columnName(name)])
+}
 
 export type RecordId = string
 
@@ -134,10 +138,10 @@ export default class Model {
     const { epochMs, timezone } = this.db._nextTimestamp()
     const includeTimezone = this.db._timestampsMode() === 'epoch+timezone'
 
-    if (schemaColumns.updated_at) {
+    if (hasColumn(schemaColumns, 'updated_at')) {
       this._setRaw(columnName('updated_at'), epochMs)
     }
-    if (includeTimezone && schemaColumns.updated_tz) {
+    if (includeTimezone && hasColumn(schemaColumns, 'updated_tz')) {
       this._setRaw(columnName('updated_tz'), timezone)
     }
 
@@ -195,13 +199,13 @@ export default class Model {
     this.__ensureNotDisposable(`Model.prepareMarkAsDeleted()`)
     const schemaColumns = this.collection.schema.columns
     const includeTimezone = this.db._timestampsMode() === 'epoch+timezone'
-    if (schemaColumns.deleted_at || (includeTimezone && schemaColumns.deleted_tz)) {
+    if (hasColumn(schemaColumns, 'deleted_at') || (includeTimezone && hasColumn(schemaColumns, 'deleted_tz'))) {
       const { epochMs, timezone } = this.db._nextTimestamp()
       this._isEditing = true
-      if (schemaColumns.deleted_at) {
+      if (hasColumn(schemaColumns, 'deleted_at')) {
         this._setRaw(columnName('deleted_at'), epochMs)
       }
-      if (includeTimezone && schemaColumns.deleted_tz) {
+      if (includeTimezone && hasColumn(schemaColumns, 'deleted_tz')) {
         this._setRaw(columnName('deleted_tz'), timezone)
       }
       this._isEditing = false
@@ -351,10 +355,10 @@ export default class Model {
   |} {
     const columns = this.collection.schema.columns
     return {
-      deletedAt: columns.deleted_at ? (this._getRaw(columnName('deleted_at')): any) : null,
-      createdTz: columns.created_tz ? (this._getRaw(columnName('created_tz')): any) : null,
-      updatedTz: columns.updated_tz ? (this._getRaw(columnName('updated_tz')): any) : null,
-      deletedTz: columns.deleted_tz ? (this._getRaw(columnName('deleted_tz')): any) : null,
+      deletedAt: hasColumn(columns, 'deleted_at') ? (this._getRaw(columnName('deleted_at')): any) : null,
+      createdTz: hasColumn(columns, 'created_tz') ? (this._getRaw(columnName('created_tz')): any) : null,
+      updatedTz: hasColumn(columns, 'updated_tz') ? (this._getRaw(columnName('updated_tz')): any) : null,
+      deletedTz: hasColumn(columns, 'deleted_tz') ? (this._getRaw(columnName('deleted_tz')): any) : null,
     }
   }
 

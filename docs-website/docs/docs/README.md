@@ -9,9 +9,11 @@ Hypertill DB is the published HelaPoint-maintained fork of WatermelonDB. It keep
 
 ## What 0.0.3 already gives you
 
+- The live docs site: [https://db.hypertill.com/](https://db.hypertill.com/)
 - The npm package: [`@hypertill/db`](https://www.npmjs.com/package/@hypertill/db)
 - Expo SDK 54+ support through the built-in package plugin
-- React helpers: `DatabaseProvider`, `useDatabase`, and `withObservables`
+- Expo plugin auto-patching for Babel decorators/class-field transforms
+- React helpers: `DatabaseProvider`, `useDatabase`, `withObservables`
 - Auto-generated React query hooks via `hooks.use<Model>` and generic `hooks.useModels`
 - SQLite adapters for iOS, Android, and Node.js
 - LokiJS support for browser-based usage
@@ -19,7 +21,7 @@ Hypertill DB is the published HelaPoint-maintained fork of WatermelonDB. It keep
 
 ## Start here
 
-1. Read the docs site: [Hypertill DB documentation](https://db.hypertill.com/docs)
+1. Open the docs site: [https://db.hypertill.com/](https://db.hypertill.com/)
 2. Install the package: [Installation guide](https://db.hypertill.com/docs/Installation)
 3. Set up schema and models: [Setup guide](https://db.hypertill.com/docs/Setup)
 4. Connect React screens: [Connecting Components](https://db.hypertill.com/docs/Components)
@@ -41,6 +43,45 @@ const { data: notes, loading } = hooks.useNotes({ search: 'hello', timeframe: '7
 const { data: note } = hooks.useNote(noteId)
 const { data: advanced } = hooks.useNotesAdvanced({
   q: (Q) => [Q.where('title', Q.like('%hello%'))],
+})
+```
+
+## Database defaults (IDs + timestamps)
+
+By default, `Database` now auto-configures:
+
+- Record IDs as UUIDv4 (Supabase-compatible format)
+- Timestamps in `epoch+timezone` mode, with `createPlatformAdapter()` injecting `created_at`, `updated_at`, `deleted_at`, and `*_tz` metadata columns
+
+Use zero config:
+
+```ts
+const database = new Database({
+  adapter,
+  modelClasses,
+})
+```
+
+To remove platform adapter boilerplate (`database.web.ts` + `database.native.ts`), you can now use:
+
+```ts
+import { createPlatformAdapter } from '@hypertill/db'
+
+const adapter = createPlatformAdapter({ schema, dbName: 'app-db' })
+// web => LokiJSAdapter, native/node => SQLiteAdapter
+```
+
+Override only when needed:
+
+```ts
+const database = new Database({
+  adapter,
+  modelClasses,
+  recordIds: { strategy: 'uuidv7' }, // default: uuidv4
+  timestamps: {
+    mode: 'epoch+timezone', // or 'epoch'
+    timezoneSource: 'device', // or 'utc' or explicit IANA string
+  },
 })
 ```
 

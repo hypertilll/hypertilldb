@@ -2,13 +2,11 @@
 import * as React from 'react'
 import useDatabase from './useDatabase'
 import * as Q from '../QueryDescription'
-import { invariant } from '../utils/common'
 
 import type Database from '../Database'
 import type Model from '../Model'
-import type { TableSchema } from '../Schema'
+import { columnName, type ColumnName, type TableSchema } from '../Schema'
 import type { Clause } from '../QueryDescription'
-import type { Class } from '../types'
 
 export type Timeframe = 'all' | '24h' | '7d' | '30d'
 export type SortOption = 'updated_desc' | 'updated_asc' | 'created_desc' | 'created_asc'
@@ -21,6 +19,9 @@ export type SimpleQueryOptions = {|
 |}
 
 export type AdvancedQueryOptions = {|
+  clauses?: Clause[],
+  inputs?: mixed[],
+  observeWithColumns?: string[],
   q?: (typeof Q) => Clause[],
 |}
 
@@ -44,6 +45,8 @@ const DEFAULT_FILTERS: SimpleQueryOptions = {
 
 const hookCache: Map<string, Function> = new Map()
 const registryCache: WeakMap<Database, Map<string, HookSpec>> = new WeakMap()
+const CREATED_AT = columnName('created_at')
+const UPDATED_AT = columnName('updated_at')
 
 function pluralize(name: string): string {
   if (/[sxz]$/.test(name) || /(ch|sh)$/.test(name)) {
@@ -97,40 +100,43 @@ function toLikePattern(value: string): string {
   return `%${escaped}%`
 }
 
-function columnExists(tableSchema: TableSchema, columnName: string): boolean {
-  return Boolean(tableSchema.columns && tableSchema.columns[columnName])
+function columnExists(tableSchema: TableSchema, queryColumn: ColumnName): boolean {
+  return Boolean(tableSchema.columns && tableSchema.columns[queryColumn])
 }
 
-function getStringColumns(tableSchema: TableSchema): string[] {
+function getStringColumns(tableSchema: TableSchema): ColumnName[] {
   return tableSchema.columnArray
     .filter((column) => column.type === 'string')
     .map((column) => column.name)
 }
 
-function resolveTimeframeColumn(tableSchema: TableSchema): string | null {
-  if (columnExists(tableSchema, 'updated_at')) return 'updated_at'
-  if (columnExists(tableSchema, 'created_at')) return 'created_at'
+function resolveTimeframeColumn(tableSchema: TableSchema): ColumnName | null {
+  if (columnExists(tableSchema, UPDATED_AT)) return UPDATED_AT
+  if (columnExists(tableSchema, CREATED_AT)) return CREATED_AT
   return null
 }
 
-function resolveSortColumn(tableSchema: TableSchema, sort: SortOption): { column: string, order: any } | null {
-  if (sort === 'updated_asc' && columnExists(tableSchema, 'updated_at')) {
-    return { column: 'updated_at', order: Q.asc }
+function resolveSortColumn(
+  tableSchema: TableSchema,
+  sort: SortOption,
+): { column: ColumnName, order: any } | null {
+  if (sort === 'updated_asc' && columnExists(tableSchema, UPDATED_AT)) {
+    return { column: UPDATED_AT, order: Q.asc }
   }
-  if (sort === 'updated_desc' && columnExists(tableSchema, 'updated_at')) {
-    return { column: 'updated_at', order: Q.desc }
+  if (sort === 'updated_desc' && columnExists(tableSchema, UPDATED_AT)) {
+    return { column: UPDATED_AT, order: Q.desc }
   }
-  if (sort === 'created_asc' && columnExists(tableSchema, 'created_at')) {
-    return { column: 'created_at', order: Q.asc }
+  if (sort === 'created_asc' && columnExists(tableSchema, CREATED_AT)) {
+    return { column: CREATED_AT, order: Q.asc }
   }
-  if (sort === 'created_desc' && columnExists(tableSchema, 'created_at')) {
-    return { column: 'created_at', order: Q.desc }
+  if (sort === 'created_desc' && columnExists(tableSchema, CREATED_AT)) {
+    return { column: CREATED_AT, order: Q.desc }
   }
-  if (columnExists(tableSchema, 'updated_at')) {
-    return { column: 'updated_at', order: Q.desc }
+  if (columnExists(tableSchema, UPDATED_AT)) {
+    return { column: UPDATED_AT, order: Q.desc }
   }
-  if (columnExists(tableSchema, 'created_at')) {
-    return { column: 'created_at', order: Q.desc }
+  if (columnExists(tableSchema, CREATED_AT)) {
+    return { column: CREATED_AT, order: Q.desc }
   }
   return null
 }
@@ -148,9 +154,9 @@ function buildSimpleClauses(
 
   const search = normalized.search || ''
   const trimmedSearch = search.trim()
-  const searchColumns =
+  const searchColumns: ColumnName[] =
     normalized.searchIn && normalized.searchIn.length > 0
-      ? normalized.searchIn
+      ? normalized.searchIn.map((name) => columnName(name))
       : getStringColumns(tableSchema)
 
   if (trimmedSearch.length > 0 && searchColumns.length > 0) {
@@ -173,9 +179,52 @@ function buildSimpleClauses(
   return clauses
 }
 
+function buildAdvancedClauses(options?: AdvancedQueryOptions): Clause[] {
+  if (!options) return []
+
+  const staticClauses = options.clauses || []
+  const dynamicClauses = options.q ? options.q(Q) || [] : []
+
+  return [...staticClauses, ...dynamicClauses]
+}
+
+function resolveAdvancedInputs(options?: AdvancedQueryOptions): mixed[] {
+  if (!options) return []
+
+  // `inputs` gives callers an explicit way to describe query dependencies
+  // without tying resubscription to function/array identity on every render.
+  if (Array.isArray(options.inputs)) {
+    return options.inputs
+  }
+
+  const fallbackInputs = []
+  if ('clauses' in options) {
+    fallbackInputs.push(options.clauses)
+  }
+  if ('q' in options) {
+    fallbackInputs.push(options.q)
+  }
+
+  return fallbackInputs
+}
+
+function areHookInputsEqual(previous: ?(mixed[]), next: mixed[]): boolean {
+  if (!previous || previous.length !== next.length) {
+    return false
+  }
+
+  for (let index = 0; index < next.length; index += 1) {
+    if (!Object.is(previous[index], next[index])) {
+      return false
+    }
+  }
+
+  return true
+}
+
 function useObservableState<T>(
   createObservable: () => any,
-  deps: any[],
+  deps: mixed[],
   initialValue: T,
   options?: { skip?: boolean },
 ): { data: T, loading: boolean, error: ?Error } {
@@ -183,18 +232,55 @@ function useObservableState<T>(
   const [data, setData] = React.useState<T>(initialValue)
   const [loading, setLoading] = React.useState<boolean>(!skip)
   const [error, setError] = React.useState<?Error>(null)
+  const createObservableRef = React.useRef(createObservable)
+  const subscriptionRef = React.useRef<?{ unsubscribe: () => void }>(null)
+  const trackedInputsRef = React.useRef<?{| deps: mixed[], skip: boolean |}>(null)
+
+  createObservableRef.current = createObservable
 
   React.useEffect(() => {
+    return () => {
+      const subscription = subscriptionRef.current
+      if (subscription) {
+        subscription.unsubscribe()
+        subscriptionRef.current = null
+      }
+    }
+  }, [])
+
+  // This effect intentionally runs after every render and resubscribes only
+  // when our manual Object.is comparison says the observable inputs changed.
+  // That keeps advanced hooks flexible without forcing callers to memoize.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  React.useEffect(() => {
+    const trackedInputs = trackedInputsRef.current
+    const shouldResubscribe =
+      !trackedInputs ||
+      trackedInputs.skip !== skip ||
+      !areHookInputsEqual(trackedInputs.deps, deps)
+
+    if (!shouldResubscribe) {
+      return
+    }
+
+    trackedInputsRef.current = { deps, skip }
+
+    const previousSubscription = subscriptionRef.current
+    if (previousSubscription) {
+      previousSubscription.unsubscribe()
+      subscriptionRef.current = null
+    }
+
     if (skip) {
       setLoading(false)
       setError(null)
       setData(initialValue)
-      return undefined
+      return
     }
 
     setLoading(true)
     setError(null)
-    const subscription = createObservable().subscribe({
+    const subscription = createObservableRef.current().subscribe({
       next: (value) => {
         setData(value)
         setLoading(false)
@@ -208,10 +294,8 @@ function useObservableState<T>(
       },
     })
 
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, deps)
+    subscriptionRef.current = subscription
+  })
 
   return { data, loading, error }
 }
@@ -258,14 +342,25 @@ function useModelsAdvancedHook<Record: Model>(
   modelClass: Class<Record>,
   options?: AdvancedQueryOptions,
 ): HookResult<Record[]> {
-  const clauseBuilder = options && options.q
+  const observeColumns = options && options.observeWithColumns
+  const observeColumnsKey =
+    observeColumns && observeColumns.length > 0 ? observeColumns.join('|') : ''
+  const observeColumnNames: ColumnName[] =
+    observeColumns && observeColumns.length > 0
+      ? observeColumns.map((name) => columnName(name))
+      : []
+  const advancedInputs = resolveAdvancedInputs(options)
   const { data, loading, error } = useObservableState(
-    () =>
-      database.collections
+    () => {
+      const query = database.collections
         .get(modelClass.table)
-        .query(...(clauseBuilder ? clauseBuilder(Q) : []))
-        .observe(),
-    [database, modelClass, clauseBuilder],
+        .query(...buildAdvancedClauses(options))
+
+      return observeColumnNames.length > 0
+        ? query.observeWithColumns(observeColumnNames)
+        : query.observe()
+    },
+    [database, modelClass, observeColumnsKey, ...advancedInputs],
     [],
   )
 
@@ -278,12 +373,9 @@ function resolveHookByName(database: Database, hookName: string): HookSpec {
   if (spec) return spec
 
   const known = Array.from(registry.keys()).sort()
-  invariant(
-    false,
+  throw new Error(
     `Unknown hook '${hookName}'. Known hooks: ${known.length ? known.join(', ') : '(none)'}`,
   )
-  // Flow: unreachable
-  throw new Error('Unknown hook')
 }
 
 const baseHooks: { [string]: any } = {
@@ -315,27 +407,34 @@ export const hooks: { [string]: any } = new Proxy(baseHooks, {
     const cached = hookCache.get(prop)
     if (cached) return cached
 
-    const hookFn = (...args) => {
+    const useGeneratedHook = (...args: any[]) => {
       const database = useDatabase()
       const spec = resolveHookByName(database, prop)
+      // Each cached proxy property maps to one stable hook shape, but the eslint
+      // hook rule cannot infer that from the dynamic registry lookup.
+      /* eslint-disable react-hooks/rules-of-hooks */
       if (spec.kind === 'one') {
         return useModelHook(database, spec.modelClass, args[0])
       }
       if (spec.kind === 'many') {
         return useModelsHook(database, spec.modelClass, args[0])
       }
-      return useModelsAdvancedHook(database, spec.modelClass, args[0])
+      const result = useModelsAdvancedHook(database, spec.modelClass, args[0])
+      /* eslint-enable react-hooks/rules-of-hooks */
+      return result
     }
 
-    hookCache.set(prop, hookFn)
-    return hookFn
+    hookCache.set(prop, useGeneratedHook)
+    return useGeneratedHook
   },
 })
 
 // Expose selected internals for tests only
 export const _internal = {
+  buildAdvancedClauses,
   buildSimpleClauses,
   getRegistry,
   normalizeFilters,
   pluralize,
+  resolveAdvancedInputs,
 }

@@ -13,8 +13,15 @@ function MockComponent() {
 
 describe('DatabaseProvider', () => {
   let database
+  let consoleErrorSpy
   beforeAll(() => {
     database = mockDatabase().db
+  })
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  })
+  afterEach(() => {
+    consoleErrorSpy.mockRestore()
   })
   it('throws if no database or adapter supplied', () => {
     expect(() => {

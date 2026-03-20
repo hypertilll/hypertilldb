@@ -12,7 +12,7 @@ The current recommended split is simple:
 - use `DatabaseProvider` once at the app root
 - use `hooks` for reactive reads
 - use `useDatabase` for writes, screen actions, and imperative work
-- use `withObservables` when you need custom reactive composition
+- use `withObservables` when you need custom reactive composition or live counts
 
 ## Start with the provider
 
@@ -20,7 +20,7 @@ Wrap your app once:
 
 ```tsx
 import { DatabaseProvider } from '@hypertill/db/react'
-import { database } from './db/database'
+import { database } from './db'
 import { LibraryScreen } from './LibraryScreen'
 
 export default function App() {
@@ -32,15 +32,17 @@ export default function App() {
 }
 ```
 
-Every reactive component or screen action then works off the same database instance.
+Every reactive component and screen action then works off the same database instance.
 
 ## Reactive reads with `hooks`
 
-Auto-generated hooks are now available in `0.0.3`. For each model, you get:
+For each model, you get:
 
 - `hooks.use<Model>(id)` for a single record
 - `hooks.use<Models>(filters?)` for lists
-- `hooks.use<Models>Advanced({ q })` for direct `Q` clauses
+- `hooks.use<Models>Advanced({ q, clauses, inputs, observeWithColumns })` for direct `Q` clauses and advanced observation control
+
+Hook names come from your model class names, so `Book` becomes `hooks.useBook()` and `hooks.useBooks()`.
 
 Example usage:
 
@@ -55,10 +57,28 @@ const { data: books, loading } = hooks.useBooks({
 
 const { data: book } = hooks.useBook(bookId)
 
-const { data: advanced } = hooks.useBooksAdvanced({
-  q: (Q) => [Q.where('status', Q.eq('reading'))],
+const { data: readingBooks } = hooks.useBooksAdvanced({
+  inputs: ['reading'],
+  q: (Q) => [Q.where('status', 'reading')],
+})
+
+const { data: orderedChapters } = hooks.useChaptersAdvanced({
+  inputs: [bookId],
+  q: (Q) => [Q.where('book_id', bookId), Q.sortBy('position', Q.asc)],
+  observeWithColumns: ['position'],
 })
 ```
+
+When you build advanced queries inline, pass `inputs` to describe the values that should trigger a resubscribe. This avoids tying updates to function identity and removes the need to wrap every advanced query in `useMemo()` or `useCallback()`.
+
+### How list filters work
+
+- `search` scans all string columns by default
+- `searchIn` limits search to specific string columns
+- `timeframe` uses `updated_at` when available, otherwise `created_at`
+- `sort` prefers `updated_at`, then falls back to `created_at`
+
+### Generic variants
 
 Generic variants are also available:
 
@@ -69,15 +89,9 @@ const { data: notes } = hooks.useModels(Note, { search: 'hello' })
 const { data: note } = hooks.useModel(Note, noteId)
 ```
 
-### How filters work
-
-- `search` automatically scans all string columns (or `searchIn` if provided)
-- `timeframe` uses `updated_at` when available, otherwise `created_at`
-- `sort` picks the relevant timestamp column and order
-
 ## Advanced reactive reads with `withObservables`
 
-Use `withObservables` when you need custom reactive composition, counts, or nested queries that exceed the hook defaults.
+Use `withObservables` when you need custom reactive composition, counts, nested queries, or a graph of observables that goes beyond the default hooks.
 
 Here is a practical TypeScript example that loads one book, its chapters, and a live count:
 
@@ -113,8 +127,8 @@ function BookDetail({ book, chapters, chapterCount }: InjectedProps) {
 export default compose(
   withDatabase,
   withObservables(['bookId'], ({ database, bookId }) => {
-    const books = database.collections.get<Book>('books')
-    const chapters = database.collections.get<Chapter>('chapters').query(
+    const books = database.get<Book>('books')
+    const chapters = database.get<Chapter>('chapters').query(
       Q.where('book_id', bookId),
       Q.sortBy('position', Q.asc),
     )
@@ -130,7 +144,7 @@ export default compose(
 
 ### Why this split works
 
-- `findAndObserve()` is the cleanest way to keep a single record live
+- `findAndObserve()` is the cleanest way to keep one record live
 - passing the `chapters` query directly is enough because `withObservables` will observe it
 - `observeCount()` gives you a cheap reactive count without loading another list into memory
 
@@ -159,11 +173,10 @@ export function AddBookButton() {
 
   const onPress = async () => {
     await database.write(async () => {
-      await database.collections.get<Book>('books').create((record) => {
+      await database.get<Book>('books').create((record) => {
         record.title = 'Deep Work'
         record.author = 'Cal Newport'
         record.status = 'reading'
-        record.updatedAt = Date.now()
       })
     })
   }
@@ -184,12 +197,22 @@ const enhance = withObservables(['book'], ({ book }) => ({
 }))
 ```
 
+You can also do this through advanced hooks:
+
+```tsx
+const { data: chapters } = hooks.useChaptersAdvanced({
+  inputs: [bookId],
+  q: (Q) => [Q.where('book_id', bookId), Q.sortBy('position', Q.asc)],
+  observeWithColumns: ['position'],
+})
+```
+
 That way the UI updates when the sort order changes, not just when rows are inserted or deleted.
 
 ## When to use which
 
 - `hooks` for the default live read path
-- `withObservables` for complex composition or custom reactive graphs
+- `withObservables` for complex composition, counts, or custom reactive graphs
 - `useDatabase` for writes and imperative logic
 
 ## Next steps

@@ -1,179 +1,175 @@
 # Relations
 
-A `Relation` object represents one record pointing to another — such as the `Book` a `Chapter` belongs to.
+A `Relation` represents one record pointing to another record.
 
-### Defining Relations
+In the library example:
 
-There's two steps to defining a relation:
+- each `Chapter` belongs to one `Book`
+- `chapter.book` is a `Relation<Book>`
 
-1. A [**table column**](./Schema.md) for the related record's ID
+## Defining a relation
 
-   ```js
-   tableSchema({
-     name: 'chapters',
-     columns: [
-       // ...
-       { name: 'book_id', type: 'string' },
-     ]
-   }),
-   ```
-2. A `@relation` field [defined on a `Model`](./Model.md) class:
+There are two parts to every relation.
 
-   ```js
-   import { relation } from '@hypertill/db/decorators'
+### 1. Add the foreign key column
 
-   class Chapter extends Model {
-     // ...
-     @relation('books', 'book_id') book
-   }
-   ```
+```ts
+tableSchema({
+  name: 'chapters',
+  columns: [
+    { name: 'book_id', type: 'string', isIndexed: true },
+  ],
+})
+```
 
-   The first argument is the _table name_ of the related record, and the second is the _column name_ with an ID for the related record.
+### 2. Add the relation field on the model
 
-### immutableRelation
+```ts
+import type { Relation } from '@hypertill/db'
+import { relation } from '@hypertill/db/decorators'
 
-If you have a relation that cannot change (for example, a chapter can't change its book), use `@immutableRelation` for extra protection and performance:
+class Chapter extends Model {
+  @relation('books', 'book_id') book!: Relation<Book>
+}
+```
 
-```js
+The first argument is the related table name. The second is the foreign key column on the current model.
+
+## `immutableRelation`
+
+If a relation should never change after creation, use `@immutableRelation`:
+
+```ts
+import type { Relation } from '@hypertill/db'
 import { immutableRelation } from '@hypertill/db/decorators'
 
 class Chapter extends Model {
-  // ...
-  @immutableRelation('books', 'book_id') book
-  @immutableRelation('libraries', 'library_id') library
+  @immutableRelation('books', 'book_id') book!: Relation<Book>
 }
 ```
+
+That gives you a little extra safety and avoids treating the relation as mutable.
 
 ## Relation API
 
-In the example above, `chapter.book` returns a `Relation` object.
+`chapter.book` does not return a `Book` immediately. It returns a `Relation<Book>` object that can:
 
-> Remember, Hypertill DB is a lazily-loaded database, so you don't get the related `Book` record immediately, only when you explicitly fetch it
+- expose the related id
+- fetch the related record
+- observe the related record
+- set the relation during create or update
 
-### Observing
+### Read only the related id
 
-Most of the time, you connect relations to React using hooks by reading the related id and then using the matching hook:
+If you only need the id, use `relation.id`:
 
-```js
-import { hooks } from '@hypertill/db/react'
-
-const { data: chapter } = hooks.useChapter(chapterId)
-const { data: book } = hooks.useBook(chapter?.book?.id)
-```
-
-The component will now have a `book` value containing the related `Book`, and will re-render when either the chapter or its book changes.
-
-If you need custom reactive composition, you can still use `withObservables` as described in [Connecting Components](./Components.md).
-
-### Fetching
-
-To simply get the related record, use `fetch`. You might need it [in a Writer](./Writers.md)
-
-```js
-const book = await chapter.book.fetch()
-
-// Shortcut syntax:
-const book = await chapter.book
-```
-
-**Note**: If the relation column (in this example, `book_id`) is marked as `isOptional: true`, `fetch()` might return `null`.
-
-### ID
-
-If you only need the ID of a related record (e.g. to use in an URL or for the `key=` React prop), use `id`.
-
-```js
+```ts
 const bookId = chapter.book.id
 ```
 
-### Assigning
+This does not fetch the related record.
 
-Use `set()` to assign a new record to the relation
+### Fetch the related record
 
-```js
-await database.get('chapters').create(chapter => {
-  chapter.book.set(someBook)
-  // ...
+```ts
+const book = await chapter.book.fetch()
+```
+
+If the relation column is optional, `fetch()` may return `null`.
+
+### Observe the relation in React
+
+With hooks, the common pattern is:
+
+```tsx
+import { hooks } from '@hypertill/db/react'
+
+const { data: chapter } = hooks.useChapter(chapterId)
+const { data: book } = hooks.useBook(chapter?.book.id)
+```
+
+That keeps the UI live as the chapter or its related book changes.
+
+If you want custom reactive composition, `withObservables` still works well:
+
+```tsx
+import { withObservables } from '@hypertill/db/react'
+
+const enhance = withObservables(['chapter'], ({ chapter }) => ({
+  chapter,
+  book: chapter.book,
+}))
+```
+
+## Assign a relation
+
+Set relations inside `create()` or `update()` builders:
+
+```ts
+await database.write(async () => {
+  await database.get('chapters').create((chapter) => {
+    chapter.book.set(book)
+    chapter.title = 'Introduction'
+    chapter.position = 1
+  })
 })
 ```
 
-**Note**: you can only do this in the `.create()` or `.update()` block.
+If you only have the id:
 
-You can also use `set id` if you only have the ID for the record to assign
+```ts
+await database.write(async () => {
+  const chapter = await database.get('chapters').find(chapterId)
 
-```js
-await chapter.update(() => {
-  chapter.book.id = bookId
+  await chapter.update((record) => {
+    record.book.id = bookId
+  })
 })
 ```
 
-## Advanced relations
+## Many-to-many pattern
 
-### Many-To-Many Relation
+For many-to-many relationships, introduce a pivot table.
 
-If for instance, our app `Book`s can be authored by many `Author`s and an author can write many `Book`s. We would create such a relation following these steps:-
+Example:
 
-1. Create a pivot schema and model that both the `Author` model and `Book` model has association to; say `BookAuthor`
-2. Create has_many association on both `Author` and `Book` pointing to `BookAuthor`
-3. Create belongs_to association on `BookAuthor` pointing to both `Author` and `Book`
-4. Retrieve all `Books` for an author by defining a query that uses the pivot `BookAuthor` to infer the `Book`s authored by the Author.
+- `Book`
+- `Author`
+- pivot table `book_authors`
 
-```js
-import { lazy } from '@hypertill/db/decorators'
-
-class Book extends Model {
-  static table = 'books'
-  static associations = {
-    book_authors: { type: 'has_many', foreignKey: 'book_id' },
-  }
-
-  @lazy
-  authors = this.collections
-    .get('authors')
-    .query(Q.on('book_authors', 'book_id', this.id));
-}
-```
-
-```js
-import { immutableRelation } from '@hypertill/db/decorators'
+```ts
+import type { Relation } from '@hypertill/db'
 
 class BookAuthor extends Model {
   static table = 'book_authors'
   static associations = {
     books: { type: 'belongs_to', key: 'book_id' },
     authors: { type: 'belongs_to', key: 'author_id' },
-  }
-  @immutableRelation('books', 'book_id') book
-  @immutableRelation('authors', 'author_id') author
-}
+  } as const
 
+  @immutableRelation('books', 'book_id') book!: Relation<Book>
+  @immutableRelation('authors', 'author_id') author!: Relation<Author>
+}
 ```
 
-```js
+Then define model-level queries that hop through the pivot table:
+
+```ts
+import { Q } from '@hypertill/db'
 import { lazy } from '@hypertill/db/decorators'
 
 class Author extends Model {
   static table = 'authors'
   static associations = {
     book_authors: { type: 'has_many', foreignKey: 'author_id' },
-  }
+  } as const
 
-  @lazy
-  books = this.collections
-    .get('books')
-    .query(Q.on('book_authors', 'author_id', this.id));
-
+  @lazy books = this.collections.get('books').query(
+    Q.on('book_authors', 'author_id', this.id),
+  )
 }
 ```
 
-```js
-withObservables(['book'], ({ book }) => ({
-  authors: book.authors,
-}))
-```
-
-* * *
-
 ## Next steps
 
-➡️ Now the last step of this guide: [**understand Writers (and Readers)**](./Writers.md)
+Once relations are clear, the next practical topic is [Writers](./Writers).

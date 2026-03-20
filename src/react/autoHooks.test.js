@@ -93,3 +93,31 @@ describe('autoHooks registry', () => {
     ])
   })
 })
+
+describe('autoHooks advanced query helpers', () => {
+  it('builds advanced clauses from both static clauses and a q builder', () => {
+    const clauses = _internal.buildAdvancedClauses({
+      clauses: [Q.where('status', 'pending')],
+      q: (queryQ) => [queryQ.sortBy('updated_at', queryQ.desc)],
+    })
+
+    expect(clauses).toEqual([
+      Q.where('status', 'pending'),
+      Q.sortBy('updated_at', Q.desc),
+    ])
+  })
+
+  it('uses explicit inputs instead of function identity when provided', () => {
+    const q = () => [Q.where('status', 'pending')]
+    const inputs = ['pending', 123]
+
+    expect(_internal.resolveAdvancedInputs({ q, inputs })).toEqual(inputs)
+  })
+
+  it('falls back to q and clauses identity when explicit inputs are omitted', () => {
+    const clauses = [Q.where('status', 'pending')]
+    const q = () => [Q.sortBy('updated_at', Q.desc)]
+
+    expect(_internal.resolveAdvancedInputs({ clauses, q })).toEqual([clauses, q])
+  })
+})

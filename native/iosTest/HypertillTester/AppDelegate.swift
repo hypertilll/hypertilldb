@@ -11,6 +11,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, RCTBridgeDelegate {
         ) -> Bool {
         if NSClassFromString("XCTest") != nil {
             NSLog("%@", "WARN: HypertillTester should be ran in Test mode, not ran directly to work in CI")
+            RCTBundleURLProviderAllowPackagerServerAccess(false)
         }
 
         let bridge = RCTBridge(delegate: self, launchOptions: launchOptions)!

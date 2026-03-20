@@ -31,7 +31,7 @@ export function createPlatformAdapter(options: PlatformAdapterOptions): Database
   if (dbName && !sqliteOptions.dbName) {
     sqliteOptions.dbName = dbName
   }
-  if (!Object.prototype.hasOwnProperty.call(sqliteOptions, 'jsi')) {
+  if (!('jsi' in sqliteOptions)) {
     sqliteOptions.jsi = true
   }
 
