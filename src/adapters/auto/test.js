@@ -2,8 +2,8 @@ import { appSchema, tableSchema } from '../../Schema'
 import Database from '../../Database'
 import Model from '../../Model'
 import LokiJSAdapter from '../lokijs'
+import SqliteAdapter from '../sqlite'
 import { date, readonly, text } from '../../decorators'
-import { withDefaultMetadataColumns } from './metadata'
 
 const schema = appSchema({
   version: 1,
@@ -119,10 +119,9 @@ describe('createPlatformAdapter', () => {
   })
 
   it('makes timestamp metadata available without declaring those columns in the app schema', async () => {
-    const normalizedSchema = withDefaultMetadataColumns(schema)
     const adapter = new LokiJSAdapter({
       dbName: 'auto-metadata-test',
-      schema: normalizedSchema,
+      schema,
       useWebWorker: false,
       useIncrementalIndexedDB: false,
     })
@@ -135,6 +134,28 @@ describe('createPlatformAdapter', () => {
     await database.write(async () => {
       record = await database.get('auto_test').create((model) => {
         model.name = 'Library'
+      })
+    })
+
+    expect(record.createdAt).toBeInstanceOf(Date)
+    expect(record.updatedAt).toBeInstanceOf(Date)
+    expect(+record.createdAt).toBe(+record.updatedAt)
+    expect(record.deletedAt).toBe(null)
+  })
+
+  it('makes timestamp metadata available without declaring those columns for direct sqlite usage', async () => {
+    const adapter = new SqliteAdapter({ schema })
+    await adapter.initializingPromise
+
+    const database = new Database({
+      adapter,
+      modelClasses: [AutoMetadataModel],
+    })
+
+    let record
+    await database.write(async () => {
+      record = await database.get('auto_test').create((model) => {
+        model.name = 'Archive'
       })
     })
 

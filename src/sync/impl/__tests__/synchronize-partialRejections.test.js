@@ -32,7 +32,6 @@ describe('synchronize - partial push rejections', () => {
     const { database, comments } = makeDatabase()
 
     const { pCreated1, tUpdated } = await makeLocalChanges(database)
-    const pCreated1Raw = { ...pCreated1._raw }
     let newComment
     await synchronize({
       database,
@@ -56,7 +55,7 @@ describe('synchronize - partial push rejections', () => {
     })
     expect((await fetchLocalChanges(database)).changes).toEqual(
       makeChangeSet({
-        mock_projects: { created: [{ ...pCreated1Raw, _changed: 'name', name: 'updated!' }] },
+        mock_projects: { created: [pCreated1._raw] },
         mock_tasks: { updated: [tUpdated._raw] },
         mock_comments: { created: [newComment._raw], deleted: ['cDeleted'] },
       }),

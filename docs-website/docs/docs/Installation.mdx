@@ -54,9 +54,9 @@ module.exports = function (api) {
     presets: ['babel-preset-expo'],
     plugins: [
       [resolveFromHypertill('@babel/plugin-proposal-decorators'), { legacy: true }],
-      [resolveFromHypertill('@babel/plugin-proposal-class-properties'), { loose: true }],
-      [resolveFromHypertill('@babel/plugin-proposal-private-methods'), { loose: true }],
-      [resolveFromHypertill('@babel/plugin-proposal-private-property-in-object'), { loose: true }],
+      [resolveFromHypertill('@babel/plugin-transform-class-properties'), { loose: true }],
+      [resolveFromHypertill('@babel/plugin-transform-private-methods'), { loose: true }],
+      [resolveFromHypertill('@babel/plugin-transform-private-property-in-object'), { loose: true }],
     ],
   }
 }
@@ -106,9 +106,9 @@ module.exports = function (api) {
     presets: ['module:metro-react-native-babel-preset'],
     plugins: [
       [resolveFromHypertill('@babel/plugin-proposal-decorators'), { legacy: true }],
-      [resolveFromHypertill('@babel/plugin-proposal-class-properties'), { loose: true }],
-      [resolveFromHypertill('@babel/plugin-proposal-private-methods'), { loose: true }],
-      [resolveFromHypertill('@babel/plugin-proposal-private-property-in-object'), { loose: true }],
+      [resolveFromHypertill('@babel/plugin-transform-class-properties'), { loose: true }],
+      [resolveFromHypertill('@babel/plugin-transform-private-methods'), { loose: true }],
+      [resolveFromHypertill('@babel/plugin-transform-private-property-in-object'), { loose: true }],
     ],
   }
 }

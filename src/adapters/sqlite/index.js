@@ -36,6 +36,7 @@ import type {
 import encodeQuery from './encodeQuery'
 
 import { makeDispatcher, getDispatcherType } from './makeDispatcher'
+import { withDefaultMetadataColumns } from '../auto/metadata'
 
 export type { SQL, SQLiteArg, SQLiteQuery }
 
@@ -74,7 +75,8 @@ export default class SQLiteAdapter implements DatabaseAdapter {
       usesExclusiveLocking = false,
       experimentalUnsafeNativeReuse = false,
     } = options
-    this.schema = schema
+    const normalizedSchema = withDefaultMetadataColumns(schema)
+    this.schema = normalizedSchema
     this.migrations = migrations
     this._migrationEvents = migrationEvents
     this.dbName = this._getName(dbName)

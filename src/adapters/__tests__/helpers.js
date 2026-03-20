@@ -6,6 +6,7 @@ import Model from '../../Model'
 import Query from '../../Query'
 import { appSchema, tableSchema } from '../../Schema'
 import { sanitizedRaw } from '../../RawRecord'
+import { withDefaultMetadataColumns } from '../auto/metadata'
 
 export class MockTask extends Model {
   static table = 'tasks'
@@ -47,7 +48,8 @@ export class MockSyncTestRecord extends Model {
   static table = 'sync_tests'
 }
 
-export const testSchema = appSchema({
+export const testSchema = withDefaultMetadataColumns(
+  appSchema({
   version: 1,
   tables: [
     tableSchema({
@@ -124,7 +126,8 @@ export const testSchema = appSchema({
       ],
     }),
   ],
-})
+}),
+)
 
 const mockCollections = {
   tasks: MockTask,

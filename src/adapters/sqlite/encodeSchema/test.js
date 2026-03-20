@@ -155,7 +155,7 @@ describe('encodeMigrationSteps', () => {
       '' +
         `alter table "posts" add "subtitle";` +
         `update "posts" set "subtitle" = null;` +
-        `create table "comments" ("id" primary key, "_changed", "_status", "post_id", "body");` +
+        `create table "comments" ("id" primary key, "_changed", "_status", "post_id", "body", "created_at", "updated_at", "deleted_at", "created_tz", "updated_tz", "deleted_tz");` +
         `create index if not exists "comments_post_id" on "comments" ("post_id");` +
         `create index if not exists "comments__status" on "comments" ("_status");` +
         `alter table "posts" add "author_id";` +
@@ -186,7 +186,7 @@ describe('encodeMigrationSteps', () => {
         `alter table "posts" add "subtitle";` +
         `update "posts" set "subtitle" = null;` +
         'bla;' +
-        `create table "comments" ("id" primary key, "_changed", "_status", "body") without rowid;` +
+        `create table "comments" ("id" primary key, "_changed", "_status", "body", "created_at", "updated_at", "deleted_at", "created_tz", "updated_tz", "deleted_tz") without rowid;` +
         `create index if not exists "comments__status" on "comments" ("_status");` +
         'boop;',
     )
