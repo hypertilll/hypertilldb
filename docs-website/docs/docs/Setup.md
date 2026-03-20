@@ -35,8 +35,6 @@ export const schema = appSchema({
         { name: 'title', type: 'string' },
         { name: 'author', type: 'string' },
         { name: 'status', type: 'string' },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
       ],
     }),
     tableSchema({
@@ -45,13 +43,13 @@ export const schema = appSchema({
         { name: 'book_id', type: 'string', isIndexed: true },
         { name: 'title', type: 'string' },
         { name: 'position', type: 'number' },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
       ],
     }),
   ],
 })
 ```
+
+If you bootstrap with `createPlatformAdapter()`, Hypertill DB injects `created_at`, `updated_at`, `deleted_at`, and the `*_tz` metadata columns for you. You only need to define your business columns here.
 
 If you need migrations, keep them in `src/db/migrations.ts` and pass them to the adapter in the next step.
 
@@ -61,7 +59,7 @@ Create `src/db/models.ts`:
 
 ```ts
 import { Model, Query, Relation } from '@hypertill/db'
-import { children, field, relation, text } from '@hypertill/db/decorators'
+import { children, date, field, readonly, relation, text } from '@hypertill/db/decorators'
 
 export class Book extends Model {
   static table = 'books'
@@ -72,8 +70,8 @@ export class Book extends Model {
   @text('title') title!: string
   @text('author') author!: string
   @text('status') status!: string
-  @field('created_at') createdAt!: number
-  @field('updated_at') updatedAt!: number
+  @readonly @date('created_at') createdAt!: Date
+  @readonly @date('updated_at') updatedAt!: Date
   @children('chapters') chapters!: Query<Chapter>
 }
 
@@ -86,8 +84,8 @@ export class Chapter extends Model {
   @field('book_id') bookId!: string
   @text('title') title!: string
   @field('position') position!: number
-  @field('created_at') createdAt!: number
-  @field('updated_at') updatedAt!: number
+  @readonly @date('created_at') createdAt!: Date
+  @readonly @date('updated_at') updatedAt!: Date
   @relation('books', 'book_id') book!: Relation<Book>
 }
 
@@ -118,7 +116,7 @@ export const database = new Database({
 
 - native and Node.js targets use SQLite
 - web targets use LokiJS
-- default metadata columns are injected for you
+- default metadata columns are injected for you: `created_at`, `updated_at`, `deleted_at`, and `*_tz`
 
 If you need lower-level adapter options, pass them through `sqlite` or `loki` inside `createPlatformAdapter(...)`.
 If you have a `migrations.ts` file, pass it as `migrations` in the same object.

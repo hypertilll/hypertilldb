@@ -154,7 +154,7 @@ describe('Database', () => {
       // keep subscriber during reset
       const subscriber2 = jest.fn()
       database.experimentalSubscribe(['mock_tasks'], subscriber2)
-      const consoleErrorSpy = jest.spyOn(console, 'log')
+      const consoleErrorSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
 
       await database.write(() => database.unsafeResetDatabase())
 
@@ -163,6 +163,7 @@ describe('Database', () => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Application error! Unexpected 1 Database subscribers were detected during database.unsafeResetDatabase() call. App should not hold onto subscriptions or Hypertill objects while resetting database.',
       )
+      consoleErrorSpy.mockRestore()
 
       // check that subscriber was killed
       await database.write(() => tasks.create())

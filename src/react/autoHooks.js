@@ -208,9 +208,23 @@ function resolveAdvancedInputs(options?: AdvancedQueryOptions): mixed[] {
   return fallbackInputs
 }
 
+function areHookInputsEqual(previous: ?(mixed[]), next: mixed[]): boolean {
+  if (!previous || previous.length !== next.length) {
+    return false
+  }
+
+  for (let index = 0; index < next.length; index += 1) {
+    if (!Object.is(previous[index], next[index])) {
+      return false
+    }
+  }
+
+  return true
+}
+
 function useObservableState<T>(
   createObservable: () => any,
-  deps: any[],
+  deps: mixed[],
   initialValue: T,
   options?: { skip?: boolean },
 ): { data: T, loading: boolean, error: ?Error } {
@@ -218,18 +232,55 @@ function useObservableState<T>(
   const [data, setData] = React.useState<T>(initialValue)
   const [loading, setLoading] = React.useState<boolean>(!skip)
   const [error, setError] = React.useState<?Error>(null)
+  const createObservableRef = React.useRef(createObservable)
+  const subscriptionRef = React.useRef<?{ unsubscribe: () => void }>(null)
+  const trackedInputsRef = React.useRef<?{| deps: mixed[], skip: boolean |}>(null)
+
+  createObservableRef.current = createObservable
 
   React.useEffect(() => {
+    return () => {
+      const subscription = subscriptionRef.current
+      if (subscription) {
+        subscription.unsubscribe()
+        subscriptionRef.current = null
+      }
+    }
+  }, [])
+
+  // This effect intentionally runs after every render and resubscribes only
+  // when our manual Object.is comparison says the observable inputs changed.
+  // That keeps advanced hooks flexible without forcing callers to memoize.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  React.useEffect(() => {
+    const trackedInputs = trackedInputsRef.current
+    const shouldResubscribe =
+      !trackedInputs ||
+      trackedInputs.skip !== skip ||
+      !areHookInputsEqual(trackedInputs.deps, deps)
+
+    if (!shouldResubscribe) {
+      return
+    }
+
+    trackedInputsRef.current = { deps, skip }
+
+    const previousSubscription = subscriptionRef.current
+    if (previousSubscription) {
+      previousSubscription.unsubscribe()
+      subscriptionRef.current = null
+    }
+
     if (skip) {
       setLoading(false)
       setError(null)
       setData(initialValue)
-      return undefined
+      return
     }
 
     setLoading(true)
     setError(null)
-    const subscription = createObservable().subscribe({
+    const subscription = createObservableRef.current().subscribe({
       next: (value) => {
         setData(value)
         setLoading(false)
@@ -243,10 +294,8 @@ function useObservableState<T>(
       },
     })
 
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, deps)
+    subscriptionRef.current = subscription
+  })
 
   return { data, loading, error }
 }

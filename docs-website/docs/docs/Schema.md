@@ -19,8 +19,6 @@ export const schema = appSchema({
         { name: 'title', type: 'string' },
         { name: 'author', type: 'string' },
         { name: 'status', type: 'string' },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
       ],
     }),
     tableSchema({
@@ -29,8 +27,6 @@ export const schema = appSchema({
         { name: 'book_id', type: 'string', isIndexed: true },
         { name: 'title', type: 'string' },
         { name: 'position', type: 'number' },
-        { name: 'created_at', type: 'number' },
-        { name: 'updated_at', type: 'number' },
       ],
     }),
   ],
@@ -73,7 +69,7 @@ That column is what `@relation()` or `@immutableRelation()` will use on the mode
 
 ## Timestamp columns
 
-If you add `created_at` and `updated_at`, Hypertill DB can keep them current during create and update operations.
+If `created_at` and `updated_at` exist on the table, Hypertill DB keeps them current during create and update operations.
 
 They also make the default React query helpers more useful:
 
@@ -84,6 +80,8 @@ They also make the default React query helpers more useful:
 
 When you bootstrap with `createPlatformAdapter()`, Hypertill DB automatically injects these metadata columns:
 
+- `created_at`
+- `updated_at`
 - `deleted_at`
 - `created_tz`
 - `updated_tz`

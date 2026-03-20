@@ -13,8 +13,15 @@ import { mockDatabase } from '../__tests__/testModels'
 
 describe('useDatabase hook', () => {
   let database
+  let consoleErrorSpy
   beforeAll(() => {
     database = mockDatabase().db
+  })
+  beforeEach(() => {
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  })
+  afterEach(() => {
+    consoleErrorSpy.mockRestore()
   })
   test('should use database', () => {
     const wrapper = ({ children }) => (

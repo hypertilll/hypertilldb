@@ -5,9 +5,9 @@ hide_title: true
 
 # Create/Update tracking
 
-You can add per-table support for create/update tracking. When you do this, the Model will have information about when it was created, and when it was last updated.
+You can expose per-table create/update tracking on the Model. When you do this, the Model will have information about when it was created, and when it was last updated.
 
-:warning: **Note:** Hypertill DB automatically sets and persists the `created_at`/`updated_at` fields if they are present as _millisecond_ epoch's. If you intend to interact with these properties in any way you should always treat them as such.
+:warning: **Note:** Hypertill DB automatically sets and persists the `created_at`/`updated_at` fields as _millisecond_ epochs when those columns exist. If you bootstrap with `createPlatformAdapter()`, those columns are injected for you automatically.
 
 ### When to use this
 
@@ -26,7 +26,7 @@ You can add per-table support for create/update tracking. When you do this, the 
 
 ### How to do this
 
-**Step 1:** Add to the [schema](../Schema.md):
+**Step 1:** Make sure the table has `created_at` / `updated_at`:
 
 ```js
 tableSchema({
@@ -38,6 +38,8 @@ tableSchema({
   ]
 }),
 ```
+
+If you use `createPlatformAdapter()`, you can skip this schema step because those metadata columns are injected automatically.
 
 **Step 2:** Add this to the Model definition:
 

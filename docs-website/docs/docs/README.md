@@ -51,7 +51,7 @@ const { data: advanced } = hooks.useNotesAdvanced({
 By default, `Database` now auto-configures:
 
 - Record IDs as UUIDv4 (Supabase-compatible format)
-- Timestamps in `epoch+timezone` mode (`created_at`, `updated_at`, `deleted_at`, plus `*_tz` when those columns exist)
+- Timestamps in `epoch+timezone` mode, with `createPlatformAdapter()` injecting `created_at`, `updated_at`, `deleted_at`, and `*_tz` metadata columns
 
 Use zero config:
 

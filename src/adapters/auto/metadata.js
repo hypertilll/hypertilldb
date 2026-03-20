@@ -10,6 +10,8 @@ import {
 } from '../../Schema'
 
 const METADATA_COLUMNS: ColumnSchema[] = [
+  { name: columnName('created_at'), type: 'number' },
+  { name: columnName('updated_at'), type: 'number' },
   { name: columnName('deleted_at'), type: 'number', isOptional: true },
   { name: columnName('created_tz'), type: 'string', isOptional: true },
   { name: columnName('updated_tz'), type: 'string', isOptional: true },

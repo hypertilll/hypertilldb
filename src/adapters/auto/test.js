@@ -1,4 +1,9 @@
 import { appSchema, tableSchema } from '../../Schema'
+import Database from '../../Database'
+import Model from '../../Model'
+import LokiJSAdapter from '../lokijs'
+import { date, readonly, text } from '../../decorators'
+import { withDefaultMetadataColumns } from './metadata'
 
 const schema = appSchema({
   version: 1,
@@ -11,10 +16,35 @@ const schema = appSchema({
 })
 
 const migrations = { migrations: [] }
-const metadataColumnNames = ['deleted_at', 'created_tz', 'updated_tz', 'deleted_tz']
+const metadataColumnNames = [
+  'created_at',
+  'updated_at',
+  'deleted_at',
+  'created_tz',
+  'updated_tz',
+  'deleted_tz',
+]
 
 const getColumnNames = (schema) =>
   schema.tables.auto_test.columnArray.map((column) => column.name)
+
+class AutoMetadataModel extends Model {
+  static table = 'auto_test'
+
+  @text('name') name
+
+  @readonly
+  @date('created_at')
+  createdAt
+
+  @readonly
+  @date('updated_at')
+  updatedAt
+
+  @readonly
+  @date('deleted_at')
+  deletedAt
+}
 
 describe('createPlatformAdapter', () => {
   afterEach(() => {
@@ -86,5 +116,31 @@ describe('createPlatformAdapter', () => {
       }),
     )
     expect(getColumnNames(call.schema)).toEqual(['name', ...metadataColumnNames])
+  })
+
+  it('makes timestamp metadata available without declaring those columns in the app schema', async () => {
+    const normalizedSchema = withDefaultMetadataColumns(schema)
+    const adapter = new LokiJSAdapter({
+      dbName: 'auto-metadata-test',
+      schema: normalizedSchema,
+      useWebWorker: false,
+      useIncrementalIndexedDB: false,
+    })
+    const database = new Database({
+      adapter,
+      modelClasses: [AutoMetadataModel],
+    })
+
+    let record
+    await database.write(async () => {
+      record = await database.get('auto_test').create((model) => {
+        model.name = 'Library'
+      })
+    })
+
+    expect(record.createdAt).toBeInstanceOf(Date)
+    expect(record.updatedAt).toBeInstanceOf(Date)
+    expect(+record.createdAt).toBe(+record.updatedAt)
+    expect(record.deletedAt).toBe(null)
   })
 })

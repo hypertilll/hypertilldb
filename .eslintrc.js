@@ -22,6 +22,9 @@ const config = {
     flowtype: {
       onlyFilesWithFlowAnnotation: true,
     },
+    react: {
+      version: 'detect',
+    },
   },
   rules: {
     'no-console': ['error'],
