@@ -6,6 +6,13 @@ on:
     branches: main
 
 jobs:
+  gradle-wrapper-validation:
+    runs-on: ubuntu-22.04
+    name: Gradle wrapper validation
+    steps:
+      - uses: actions/checkout@v3
+      - name: Gradle Wrapper Validation
+        uses: gradle/wrapper-validation-action@v1.0.6
   ci-check:
     runs-on: ubuntu-22.04
     name: JavaScript tests
@@ -24,8 +31,6 @@ jobs:
           key: ${{ runner.os }}-node-${{ matrix.node-version }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn
       - run: yarn ci:check
-      - name: Gradle Wrapper Validation
-        uses: gradle/wrapper-validation-action@v1.0.6
       - name: Check docs build
         run: cd docs-website && yarn install && cd .. && yarn docs:build
   ios:
