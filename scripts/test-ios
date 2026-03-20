@@ -42,10 +42,10 @@ resolve_destination() {
       /Available destinations for the/ { available = 1; next }
       /Ineligible destinations for the/ { available = 0 }
       available && /platform:macOS/ && /variant:Designed for \[iPad,iPhone\]/ {
-        if (match($0, /id:[^,}]+/)) {
+        if (match($0, /arch:[^,}]+/)) {
           spec = substr($0, RSTART, RLENGTH)
-          gsub(/:/, "=", spec)
-          print spec
+          sub(/^arch:/, "", spec)
+          print "platform=macOS,arch=" spec
           exit
         }
       }
@@ -64,6 +64,8 @@ resolve_destination() {
 }
 
 DESTINATION="$(resolve_destination)"
+
+echo "Using iOS test destination: $DESTINATION"
 
 xcodebuild \
   -workspace "$WORKSPACE" \
