@@ -639,6 +639,14 @@ export default () => {
       },
     })
     const d = { _status: 'synced', _changed: '' }
+    const metadataDefaults = {
+      created_at: 0,
+      updated_at: 0,
+      deleted_at: null,
+      created_tz: null,
+      updated_tz: null,
+      deleted_tz: null,
+    }
     const sqlBool = (value) => {
       if (value === true) {
         return 1
@@ -648,14 +656,55 @@ export default () => {
       return value
     }
     expect(await adapter.unsafeQueryRaw(query)).toEqual([
-      { id: 't1', ...d, str: '', strN: null, num: 0, numN: null, bool: 0, boolN: null },
-      { id: 't2', ...d, str: 'ab', strN: null, num: 0, numN: null, bool: 0, boolN: null },
-      { id: 't3', ...d, str: 'hy', strN: 'true', num: 3.141592137, numN: null, bool: 0, boolN: 0 },
-      { id: 't4', ...d, str: '', strN: null, num: 1623666158603, numN: null, bool: 0, boolN: null },
+      {
+        id: 't1',
+        ...d,
+        ...metadataDefaults,
+        str: '',
+        strN: null,
+        num: 0,
+        numN: null,
+        bool: 0,
+        boolN: null,
+      },
+      {
+        id: 't2',
+        ...d,
+        ...metadataDefaults,
+        str: 'ab',
+        strN: null,
+        num: 0,
+        numN: null,
+        bool: 0,
+        boolN: null,
+      },
+      {
+        id: 't3',
+        ...d,
+        ...metadataDefaults,
+        str: 'hy',
+        strN: 'true',
+        num: 3.141592137,
+        numN: null,
+        bool: 0,
+        boolN: 0,
+      },
+      {
+        id: 't4',
+        ...d,
+        ...metadataDefaults,
+        str: '',
+        strN: null,
+        num: 1623666158603,
+        numN: null,
+        bool: 0,
+        boolN: null,
+      },
       ...expectedSanitizations.map((values, i) => ({
         id: `x${i}`,
         _status: 'synced',
         _changed: '',
+        ...metadataDefaults,
         str: values.string[0],
         strN: values.string[1],
         num: values.number[0],
