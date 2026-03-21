@@ -28,36 +28,35 @@ describe('schemaMigrations()', () => {
     })
   })
   it('returns a complex schema migrations spec', () => {
+    const createCommentsTable = createTable({
+      name: 'comments',
+      columns: [
+        { name: 'post_id', type: 'string', isIndexed: true },
+        { name: 'body', type: 'string' },
+      ],
+    })
+    const addAuthorId = addColumns({
+      table: 'posts',
+      columns: [{ name: 'author_id', type: 'string', isIndexed: true }],
+    })
+    const addPostColumns = addColumns({
+      table: 'posts',
+      columns: [
+        { name: 'subtitle', type: 'string', isOptional: true },
+        { name: 'is_pinned', type: 'boolean' },
+      ],
+    })
+
     const migrations = schemaMigrations({
       migrations: [
         { toVersion: 4, steps: [] },
         {
           toVersion: 3,
-          steps: [
-            createTable({
-              name: 'comments',
-              columns: [
-                { name: 'post_id', type: 'string', isIndexed: true },
-                { name: 'body', type: 'string' },
-              ],
-            }),
-            addColumns({
-              table: 'posts',
-              columns: [{ name: 'author_id', type: 'string', isIndexed: true }],
-            }),
-          ],
+          steps: [createCommentsTable, addAuthorId],
         },
         {
           toVersion: 2,
-          steps: [
-            addColumns({
-              table: 'posts',
-              columns: [
-                { name: 'subtitle', type: 'string', isOptional: true },
-                { name: 'is_pinned', type: 'boolean' },
-              ],
-            }),
-          ],
+          steps: [addPostColumns],
         },
       ],
     })
@@ -68,40 +67,11 @@ describe('schemaMigrations()', () => {
       sortedMigrations: [
         {
           toVersion: 2,
-          steps: [
-            {
-              type: 'add_columns',
-              table: 'posts',
-              columns: [
-                { name: 'subtitle', type: 'string', isOptional: true },
-                { name: 'is_pinned', type: 'boolean' },
-              ],
-            },
-          ],
+          steps: [addPostColumns],
         },
         {
           toVersion: 3,
-          steps: [
-            {
-              type: 'create_table',
-              schema: {
-                name: 'comments',
-                columns: {
-                  post_id: { name: 'post_id', type: 'string', isIndexed: true },
-                  body: { name: 'body', type: 'string' },
-                },
-                columnArray: [
-                  { name: 'post_id', type: 'string', isIndexed: true },
-                  { name: 'body', type: 'string' },
-                ],
-              },
-            },
-            {
-              type: 'add_columns',
-              table: 'posts',
-              columns: [{ name: 'author_id', type: 'string', isIndexed: true }],
-            },
-          ],
+          steps: [createCommentsTable, addAuthorId],
         },
         { toVersion: 4, steps: [] },
       ],
@@ -170,6 +140,22 @@ describe('migration step functions', () => {
     expect(() => createTable({ name: 'foo', columns: [{ name: 'x', type: 'blah' }] })).toThrow(
       'type',
     )
+  })
+  it('adds default metadata columns to createTable()', () => {
+    const step = createTable({
+      name: 'foo',
+      columns: [{ name: 'x', type: 'string' }],
+    })
+
+    expect(Object.keys(step.schema.columns)).toEqual([
+      'x',
+      'created_at',
+      'updated_at',
+      'deleted_at',
+      'created_tz',
+      'updated_tz',
+      'deleted_tz',
+    ])
   })
   it('throws if addColumns() is malformed', () => {
     expect(() => addColumns({ columns: [{}] })).toThrow('table')

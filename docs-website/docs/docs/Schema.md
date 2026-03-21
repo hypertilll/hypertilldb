@@ -71,6 +71,8 @@ That column is what `@relation()` or `@immutableRelation()` will use on the mode
 
 If `created_at` and `updated_at` exist on the table, Hypertill DB keeps them current during create and update operations.
 
+All persisted models also expose built-in `createdAt`, `updatedAt`, and `deletedAt` getters, so you do not need to map those metadata columns manually on each model class.
+
 They also make the default React query helpers more useful:
 
 - list hooks use `updated_at` first for sorting and timeframe filtering

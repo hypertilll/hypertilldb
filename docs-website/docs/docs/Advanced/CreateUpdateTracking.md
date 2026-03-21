@@ -5,7 +5,7 @@ hide_title: true
 
 # Create/Update tracking
 
-You can expose per-table create/update tracking on the Model. When you do this, the Model will have information about when it was created, and when it was last updated.
+Hypertill DB exposes built-in timestamp getters on every `Model`, so records can tell you when they were created, updated, or marked as deleted without repeating decorators on each class.
 
 :warning: **Note:** Hypertill DB automatically sets and persists the `created_at`/`updated_at` fields as _millisecond_ epochs when those columns exist. If you bootstrap with `createPlatformAdapter()`, those columns are injected for you automatically.
 
@@ -21,8 +21,9 @@ You can expose per-table create/update tracking on the Model. When you do this, 
 - When you display to the user when a thing (e.g. a Post) was modified
 
 **Notes**:
- - you _don't have to_ enable both create and update tracking. You can do either, both, or none.
- - In your model, these fields need to be called createdAt and updatedAt respectively.
+- you _don't have to_ enable both create and update tracking. You can do either, both, or none.
+- `createdAt`, `updatedAt`, and `deletedAt` are reserved getters on every `Model`.
+- avoid reusing those property names for unrelated columns.
 
 ### How to do this
 
@@ -41,22 +42,28 @@ tableSchema({
 
 If you use `createPlatformAdapter()`, you can skip this schema step because those metadata columns are injected automatically.
 
-**Step 2:** Add this to the Model definition:
+**Step 2:** No per-model declaration is required:
 
 ```js
-import { date, readonly } from '@hypertill/db/decorators'
-
 class Post extends Model {
   // ...
-  @readonly @date('created_at') createdAt
-  @readonly @date('updated_at') updatedAt
 }
 ```
 
-Again, you can add just `created_at` column and field if you don't need update tracking.
+You can read the built-in getters directly:
+
+```js
+post.createdAt // Date | null
+post.updatedAt // Date | null
+post.deletedAt // Date | null
+```
+
+Again, you can add just `created_at` if you only need create tracking, or skip `updated_at` if you do not need update tracking.
 
 ### How this behaves
 
-If you have the magic `createdAt` field defined on the Model, the current timestamp will be set when you first call `collection.create()` or `collection.prepareCreate()`. It will never be modified again.
+If the table has `created_at`, the current timestamp is set when you first call `collection.create()` or `collection.prepareCreate()`. It will never be modified again.
 
-If the magic `updatedAt` field is also defined, then after creation, `model.updatedAt` will have the same value as `model.createdAt`. Then every time you call `model.update()` or `model.prepareUpdate()`, `updatedAt` will be changed to the current timestamp.
+If the table also has `updated_at`, then after creation, `model.updatedAt` will have the same value as `model.createdAt`. Then every time you call `model.update()` or `model.prepareUpdate()`, `updatedAt` will be changed to the current timestamp.
+
+If the table has `deleted_at`, `model.deletedAt` is set when you call `model.markAsDeleted()` or `model.prepareMarkAsDeleted()`.

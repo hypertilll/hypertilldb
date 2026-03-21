@@ -225,7 +225,7 @@ describe('synchronize', () => {
       // TODO: That's just dirty
       ...(await getRaw(tasks, 'tUpdated')),
       _status: 'updated',
-      _changed: 'name,position',
+      _changed: 'updated_at,updated_tz,name,position',
     }
     expect(pushedChanges.mock_tasks.updated).toContainEqual(tUpdatedResolvedExpected)
     expect(pushedChanges.mock_tasks.deleted).toContain('tDeleted')
@@ -233,7 +233,7 @@ describe('synchronize', () => {
       // TODO: That's just dirty
       ...(await getRaw(comments, 'cUpdated')),
       _status: 'updated',
-      _changed: 'updated_at,body',
+      _changed: 'updated_at,updated_tz,body',
     }
     expect(pushedChanges.mock_comments.updated).toContainEqual(cUpdatedResolvedExpected)
 
@@ -312,14 +312,14 @@ describe('synchronize', () => {
     ])
     expect(conflictResolver.mock.calls[1]).toMatchObject([
       'mock_projects',
-      { id: 'p1', _status: 'synced' },
+      { id: 'p1', _status: 'updated' },
       { name: 'change' },
       { _status: 'synced' },
     ])
     expect(conflictResolver.mock.results[1].value).toBe(conflictResolver.mock.calls[1][3])
     expect(conflictResolver.mock.calls[2]).toMatchObject([
       'mock_tasks',
-      { id: 't1', _status: 'synced', name: '' },
+      { id: 't1', _status: 'updated', name: '' },
       { name: 'remote' },
       { name: 'GOTCHA' }, // we're mutating this arg in function, that's why
     ])
@@ -458,14 +458,14 @@ describe('synchronize', () => {
     const betweenApplyAndFetchAction = jest.fn(async () => {
       await expectSyncedAndMatches(projects, 'new_project', {})
       expect(pushChanges).toHaveBeenCalledTimes(0)
-      project2 = (await createProject('project2'))._raw
+      project2 = { ...(await createProject('project2'))._raw }
     })
 
     // run this before applyRemoteChanges
     let project1
     const beforeApplyAction = jest.fn(async () => {
       await expectDoesNotExist(projects, 'new_project')
-      project1 = (await createProject('project1'))._raw
+      project1 = { ...(await createProject('project1'))._raw }
       database.write(betweenApplyAndFetchAction, 'betweenApplyAndFetchAction')
     })
     database.write(beforeApplyAction, 'beforeApplyAction')
@@ -536,7 +536,7 @@ describe('synchronize', () => {
     })
     expect(task._raw).toMatchObject({
       _status: 'created',
-      _changed: 'is_completed,position',
+      _changed: 'updated_at,updated_tz,is_completed,position',
       position: 20,
       is_completed: true,
     })
@@ -552,7 +552,10 @@ describe('synchronize', () => {
         timestamp: 1500,
       }),
       pushChanges: () => {
-        expect(task._raw).toMatchObject({ _status: 'created', _changed: 'is_completed,position' })
+        expect(task._raw).toMatchObject({
+          _status: 'created',
+          _changed: 'updated_at,updated_tz,is_completed,position',
+        })
       },
     })
     expect(task._raw).toMatchObject({

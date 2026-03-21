@@ -1,6 +1,6 @@
 # Connecting Components
 
-Hypertill DB `0.0.3` ships the React helpers you need for day-to-day app work:
+Hypertill DB `0.0.4` ships the React helpers you need for day-to-day app work:
 
 - `DatabaseProvider`
 - `useDatabase`

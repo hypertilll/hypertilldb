@@ -124,7 +124,7 @@ describe('markLocalChangesAsSynced', () => {
     await expectSyncedAndMatches(tasks, 'tUpdated', {
       _status: 'updated',
       // TODO: ideally position would probably not be here
-      _changed: 'name,position,description',
+      _changed: 'updated_at,updated_tz,name,position,description',
       name: 'local2',
       description: 'local2',
       position: 100,

@@ -2,17 +2,19 @@ const path = require('path')
 const { withAppBuildGradle, withDangerousMod, withMainApplication, withSettingsGradle } = require('@expo/config-plugins')
 const fs = require('fs/promises')
 
-const REQUIRED_BABEL_PLUGIN_IDS = [
-  '@babel/plugin-proposal-decorators',
-  '@babel/plugin-transform-flow-strip-types',
-  '@babel/plugin-proposal-class-properties',
-  '@babel/plugin-proposal-private-methods',
-  '@babel/plugin-proposal-private-property-in-object',
-]
-
 const CLASS_PROPERTIES_PLUGIN_IDS = [
   '@babel/plugin-proposal-class-properties',
   '@babel/plugin-transform-class-properties',
+]
+
+const PRIVATE_METHODS_PLUGIN_IDS = [
+  '@babel/plugin-proposal-private-methods',
+  '@babel/plugin-transform-private-methods',
+]
+
+const PRIVATE_PROPERTY_IN_OBJECT_PLUGIN_IDS = [
+  '@babel/plugin-proposal-private-property-in-object',
+  '@babel/plugin-transform-private-property-in-object',
 ]
 
 const BABEL_CONFIG_FILE_NAMES = ['babel.config.js', 'babel.config.cjs']
@@ -34,19 +36,21 @@ const REQUIRED_BABEL_PLUGIN_GROUPS = [
   {
     key: 'class-properties',
     ids: CLASS_PROPERTIES_PLUGIN_IDS,
-    entry: `[${resolveFromHypertillPackage('@babel/plugin-proposal-class-properties')}, { loose: true }]`,
+    entry: `[${resolveFromHypertillPackage('@babel/plugin-transform-class-properties')}, { loose: true }]`,
   },
   {
     key: 'private-methods',
-    ids: ['@babel/plugin-proposal-private-methods'],
-    entry: `[${resolveFromHypertillPackage('@babel/plugin-proposal-private-methods')}, { loose: true }]`,
+    ids: PRIVATE_METHODS_PLUGIN_IDS,
+    entry: `[${resolveFromHypertillPackage('@babel/plugin-transform-private-methods')}, { loose: true }]`,
   },
   {
     key: 'private-property-in-object',
-    ids: ['@babel/plugin-proposal-private-property-in-object'],
-    entry: `[${resolveFromHypertillPackage('@babel/plugin-proposal-private-property-in-object')}, { loose: true }]`,
+    ids: PRIVATE_PROPERTY_IN_OBJECT_PLUGIN_IDS,
+    entry: `[${resolveFromHypertillPackage('@babel/plugin-transform-private-property-in-object')}, { loose: true }]`,
   },
 ]
+
+const REQUIRED_BABEL_PLUGIN_IDS = REQUIRED_BABEL_PLUGIN_GROUPS.flatMap((group) => group.ids)
 
 function getRequiredBabelPluginEntries() {
   return REQUIRED_BABEL_PLUGIN_GROUPS.map((group) => group.entry)

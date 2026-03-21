@@ -17,7 +17,7 @@ const features = [
   {
     label: 'Reactive UI',
     title: 'Use the current React surface without inventing your own database runtime.',
-    text: 'DatabaseProvider, useDatabase, and auto-generated hooks are the supported building blocks in 0.0.3.',
+    text: 'DatabaseProvider, useDatabase, and auto-generated hooks are the supported building blocks in 0.0.4.',
   },
 ]
 
@@ -71,7 +71,7 @@ export default function Home() {
               </div>
 
               <div className={styles.metaRow}>
-                <span>Version 0.0.3</span>
+                <span>Version 0.0.4</span>
                 <span>Expo SDK 54+ plugin included</span>
                 <span>Android and iOS native builds</span>
               </div>

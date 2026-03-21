@@ -7,7 +7,7 @@ hide_title: true
 
 Hypertill DB is the published HelaPoint-maintained fork of WatermelonDB. It keeps the same local-first database architecture, but the package identity, docs, and mobile example app now ship under the Hypertill name.
 
-## What 0.0.3 already gives you
+## What 0.0.4 already gives you
 
 - The live docs site: [https://db.hypertill.com/](https://db.hypertill.com/)
 - The npm package: [`@hypertill/db`](https://www.npmjs.com/package/@hypertill/db)
@@ -15,6 +15,7 @@ Hypertill DB is the published HelaPoint-maintained fork of WatermelonDB. It keep
 - Expo plugin auto-patching for Babel decorators/class-field transforms
 - React helpers: `DatabaseProvider`, `useDatabase`, `withObservables`
 - Auto-generated React query hooks via `hooks.use<Model>` and generic `hooks.useModels`
+- Reserved `Model` getters for `createdAt`, `updatedAt`, and `deletedAt`
 - SQLite adapters for iOS, Android, and Node.js
 - LokiJS support for browser-based usage
 - A TypeScript Expo reference app for books, chapters, book notes, and chapter notes
@@ -27,7 +28,7 @@ Hypertill DB is the published HelaPoint-maintained fork of WatermelonDB. It keep
 4. Connect React screens: [Connecting Components](https://db.hypertill.com/docs/Components)
 5. Review the working mobile reference: [expo-hypertillDB-example](https://github.com/hypertilll/expo-hypertillDB-example)
 
-## Current React guidance in 0.0.3
+## Current React guidance in 0.0.4
 
 - Put `DatabaseProvider` at the app root once.
 - Use `hooks` for reactive reads (`hooks.use<Model>`, `hooks.use<Models>`, `hooks.use<Models>Advanced`).

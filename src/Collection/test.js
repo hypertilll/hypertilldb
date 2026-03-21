@@ -6,7 +6,7 @@ import * as Q from '../QueryDescription'
 import { logger } from '../utils/common'
 import { toPromise } from '../utils/fp/Result'
 
-import { mockDatabase, MockTask, testSchema } from '../__tests__/testModels'
+import { mockDatabase, MockTask } from '../__tests__/testModels'
 
 const mockQuery = (collection) => new Query(collection, [Q.where('a', 'b')])
 
@@ -19,11 +19,13 @@ describe('Collection', () => {
   it('exposes schema', () => {
     const { tasks, projects } = mockDatabase()
 
-    expect(tasks.schema).toBe(testSchema.tables.mock_tasks)
+    expect(tasks.schema).toEqual(expect.objectContaining({ name: 'mock_tasks' }))
     expect(tasks.schema.name).toBe('mock_tasks')
     expect(tasks.schema.columns.name).toEqual({ name: 'name', type: 'string' })
+    expect(tasks.schema.columns.created_at).toEqual({ name: 'created_at', type: 'number' })
+    expect(tasks.schema.columns.updated_at).toEqual({ name: 'updated_at', type: 'number' })
 
-    expect(projects.schema).toBe(testSchema.tables.mock_projects)
+    expect(projects.schema).toEqual(expect.objectContaining({ name: 'mock_projects' }))
   })
   it(`exposes query()`, () => {
     const { tasks } = mockDatabase()

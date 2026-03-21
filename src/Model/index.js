@@ -16,6 +16,7 @@ import { type TableName, type ColumnName, type ColumnMap, columnName } from '../
 import type { Value } from '../QueryDescription'
 import { type RawRecord, type DirtyRaw, sanitizedRaw, setRawSanitized } from '../RawRecord'
 import { setRawColumnChange } from '../sync/helpers'
+import { cachedDateFromRaw } from '../decorators/date'
 
 import { createTimestampsFor, fetchDescendants } from './helpers'
 
@@ -95,6 +96,37 @@ export default class Model {
    */
   get syncStatus(): SyncStatus {
     return this._raw._status
+  }
+
+  _getTimestampDate(rawColumnName: string): ?Date {
+    const columns = this.collection.schema.columns
+
+    if (!hasColumn(columns, rawColumnName)) {
+      return null
+    }
+
+    return cachedDateFromRaw(this._getRaw(columnName(rawColumnName)))
+  }
+
+  /**
+   * Created timestamp tracked automatically for all persisted models.
+   */
+  get createdAt(): ?Date {
+    return this._getTimestampDate('created_at')
+  }
+
+  /**
+   * Updated timestamp tracked automatically for all persisted models.
+   */
+  get updatedAt(): ?Date {
+    return this._getTimestampDate('updated_at')
+  }
+
+  /**
+   * Deleted timestamp tracked automatically when records are marked as deleted.
+   */
+  get deletedAt(): ?Date {
+    return this._getTimestampDate('deleted_at')
   }
 
   /**

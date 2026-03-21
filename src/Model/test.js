@@ -170,8 +170,8 @@ describe('CRUD', () => {
     expect(m1._isEditing).toBe(false)
     expect(m1._preparedState).toBe('create')
     expect(m1.id).toMatch(UUID_V4_REGEX)
-    expect(m1.createdAt).toBe(undefined)
-    expect(m1.updatedAt).toBe(undefined)
+    expect(m1.createdAt).toBe(null)
+    expect(m1.updatedAt).toBe(null)
     expect(m1.name).toBe('Some name')
     expect(m1._raw).toEqual({
       id: m1.id,
@@ -193,8 +193,8 @@ describe('CRUD', () => {
     expect(m1._isEditing).toBe(false)
     expect(m1._preparedState).toBe('create')
     expect(m1.id).toMatch(UUID_V4_REGEX)
-    expect(m1.createdAt).toBe(undefined)
-    expect(m1.updatedAt).toBe(undefined)
+    expect(m1.createdAt).toBe(null)
+    expect(m1.updatedAt).toBe(null)
     expect(m1.name).toBe('Some name')
     expect(m1._raw).toEqual({
       id: m1.id,
@@ -257,7 +257,7 @@ describe('CRUD', () => {
       expect(update).toBe(m1)
 
       expect(m1.name).toBe('New name')
-      expect(m1.updatedAt).toBe(undefined)
+      expect(m1.updatedAt).toBe(null)
       expect(m1._isEditing).toBe(false)
       expect(m1._preparedState).toBe(null)
     })
@@ -287,7 +287,7 @@ describe('CRUD', () => {
     expect(preparedUpdate).toBe(m1)
 
     expect(m1.name).toBe('New name')
-    expect(m1.updatedAt).toBe(undefined)
+    expect(m1.updatedAt).toBe(null)
     expect(m1._isEditing).toBe(false)
     expect(m1._preparedState).toBe('update')
     expect(db.adapter.batch).toHaveBeenCalledTimes(1)
@@ -540,22 +540,22 @@ describe('Safety features', () => {
 })
 
 describe('Automatic created_at/updated_at', () => {
-  it('_prepareCreate: sets created_at on create if model defines it', () => {
+  it('_prepareCreate: sets created_at on create when the table includes the column', () => {
     const db = makeDatabase()
     const m1 = MockModelCreated._prepareCreate(db.get('mock_created'), noop)
 
     expect(m1.createdAt).toBeInstanceOf(Date)
     expect(+m1.createdAt).toBeGreaterThan(1500000000000)
-    expect(m1.updatedAt).toBe(undefined)
+    expect(m1.updatedAt).toBe(null)
   })
-  it('_prepareCreate: sets created_at, updated_at on create if model defines it', () => {
+  it('_prepareCreate: sets created_at, updated_at on create when the table includes the columns', () => {
     const db = makeDatabase()
     const m1 = MockModelCreatedUpdated._prepareCreate(db.get('mock_created_updated'), noop)
 
     expect(m1.createdAt).toBeInstanceOf(Date)
     expect(+m1.createdAt).toBe(+m1.updatedAt)
   })
-  it('touches updated_at on update if model defines it', async () => {
+  it('touches updated_at on update when the table includes the column', async () => {
     const db = makeDatabase()
     db.adapter.batch = jest.fn()
     await db.write(async () => {

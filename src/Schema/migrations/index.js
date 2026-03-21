@@ -7,7 +7,8 @@ import isObj from '../../utils/fp/isObj'
 
 import type { $RE } from '../../types'
 import type { ColumnSchema, TableName, TableSchema, TableSchemaSpec, SchemaVersion } from '../index'
-import { tableSchema, validateColumnSchema } from '../index'
+import { validateColumnSchema } from '../index'
+import { tableSchemaWithDefaultMetadata } from '../metadata'
 
 export type CreateTableMigrationStep = $RE<{
   type: 'create_table',
@@ -137,7 +138,7 @@ export function schemaMigrations(migrationSpec: SchemaMigrationsSpec): SchemaMig
 }
 
 export function createTable(tableSchemaSpec: TableSchemaSpec): CreateTableMigrationStep {
-  const schema = tableSchema(tableSchemaSpec)
+  const schema = tableSchemaWithDefaultMetadata(tableSchemaSpec)
   return { type: 'create_table', schema }
 }
 

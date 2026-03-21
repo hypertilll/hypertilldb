@@ -79,13 +79,14 @@ describe('applyRemoteChanges', () => {
 
     await expectSyncedAndMatches(tasks, 'tUpdated', {
       _status: 'updated',
-      _changed: 'name,position',
+      _changed: 'updated_at,updated_tz,name,position',
       name: 'local', // local change preserved
       position: 100,
       description: 'remote', // remote change
       project_id: 'orig', // unchanged
     })
-    await expectSyncedAndMatches(comments, 'cDeleted', { _status: 'deleted', body: '' })
+    await expectDoesNotExist(comments, 'cDeleted')
+    expect(await allDeletedRecords([comments])).toContain('cDeleted')
   })
   it('can delete records in all edge cases', async () => {
     const { database, projects } = makeDatabase()
@@ -128,7 +129,7 @@ describe('applyRemoteChanges', () => {
     await expectSyncedAndMatches(tasks, 'tSynced', { name: 'remote' })
     await expectSyncedAndMatches(tasks, 'tUpdated', {
       _status: 'updated',
-      _changed: 'name,position',
+      _changed: 'updated_at,updated_tz,name,position',
       name: 'local', // local change preserved
       position: 100,
       description: 'remote', // remote change
@@ -265,12 +266,12 @@ describe('applyRemoteChanges', () => {
       })
       expect(await getRaw(projects, 'pUpdated')).toMatchObject({
         _status: 'updated',
-        _changed: 'name',
+        _changed: 'updated_at,updated_tz,name',
         name: 'local',
       })
       expect(await getRaw(tasks, 'tUpdated')).toMatchObject({
         _status: 'updated',
-        _changed: 'name,position',
+        _changed: 'updated_at,updated_tz,name,position',
         name: 'local',
         position: 100,
         description: 'remote',

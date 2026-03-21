@@ -59,7 +59,7 @@ Create `src/db/models.ts`:
 
 ```ts
 import { Model, Query, Relation } from '@hypertill/db'
-import { children, date, field, readonly, relation, text } from '@hypertill/db/decorators'
+import { children, field, relation, text } from '@hypertill/db/decorators'
 
 export class Book extends Model {
   static table = 'books'
@@ -70,8 +70,6 @@ export class Book extends Model {
   @text('title') title!: string
   @text('author') author!: string
   @text('status') status!: string
-  @readonly @date('created_at') createdAt!: Date
-  @readonly @date('updated_at') updatedAt!: Date
   @children('chapters') chapters!: Query<Chapter>
 }
 
@@ -84,13 +82,13 @@ export class Chapter extends Model {
   @field('book_id') bookId!: string
   @text('title') title!: string
   @field('position') position!: number
-  @readonly @date('created_at') createdAt!: Date
-  @readonly @date('updated_at') updatedAt!: Date
   @relation('books', 'book_id') book!: Relation<Book>
 }
 
 export const modelClasses = [Book, Chapter]
 ```
+
+Every persisted model already exposes reserved `createdAt`, `updatedAt`, and `deletedAt` getters on `Model`. When the matching metadata columns exist, those getters return `Date | null`, so you do not repeat timestamp decorators on every model.
 
 ## 3. Create the database
 

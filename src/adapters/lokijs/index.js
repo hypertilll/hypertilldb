@@ -19,6 +19,7 @@ import type {
   UnsafeExecuteOperations,
 } from '../type'
 import { devSetupCallback, validateAdapter, validateTable } from '../common'
+import { withDefaultMetadataColumns } from '../auto/metadata'
 
 import LokiDispatcher from './dispatcher'
 
@@ -89,11 +90,17 @@ export default class LokiJSAdapter implements DatabaseAdapter {
   _options: LokiAdapterOptions
 
   constructor(options: LokiAdapterOptions): void {
-    this._options = options
-    this.dbName = options.dbName || 'loki'
-    const { schema, migrations } = options
+    const normalizedSchema = withDefaultMetadataColumns(options.schema)
+    const normalizedOptions = {
+      ...options,
+      schema: normalizedSchema,
+    }
 
-    const useWebWorker = options.useWebWorker ?? process.env.NODE_ENV !== 'test'
+    this._options = normalizedOptions
+    this.dbName = options.dbName || 'loki'
+    const { schema, migrations } = normalizedOptions
+
+    const useWebWorker = normalizedOptions.useWebWorker ?? process.env.NODE_ENV !== 'test'
     this._dispatcher = new LokiDispatcher(useWebWorker)
 
     this.schema = schema
@@ -101,27 +108,27 @@ export default class LokiJSAdapter implements DatabaseAdapter {
 
     if (process.env.NODE_ENV !== 'production') {
       invariant(
-        'useWebWorker' in options,
+        'useWebWorker' in normalizedOptions,
         'LokiJSAdapter `useWebWorker` option is required. Pass `{ useWebWorker: false }` to adopt the new behavior, or `{ useWebWorker: true }` to supress this warning with no changes',
       )
-      if (options.useWebWorker === true) {
+      if (normalizedOptions.useWebWorker === true) {
         logger.warn(
           'LokiJSAdapter {useWebWorker: true} option is now deprecated. If you rely on this feature, please file an issue',
         )
       }
       invariant(
-        'useIncrementalIndexedDB' in options,
+        'useIncrementalIndexedDB' in normalizedOptions,
         'LokiJSAdapter `useIncrementalIndexedDB` option is required. Pass `{ useIncrementalIndexedDB: true }` to adopt the new behavior, or `{ useIncrementalIndexedDB: false }` to supress this warning with no changes',
       )
-      if (options.useIncrementalIndexedDB === false) {
+      if (normalizedOptions.useIncrementalIndexedDB === false) {
         logger.warn(
           'LokiJSAdapter {useIncrementalIndexedDB: false} option is now deprecated. If you rely on this feature, please file an issue',
         )
       }
       validateAdapter(this)
     }
-    const callback = (result: Result<any>) => devSetupCallback(result, options.onSetUpError)
-    this._dispatcher.call('setUp', [options], callback)
+    const callback = (result: Result<any>) => devSetupCallback(result, normalizedOptions.onSetUpError)
+    this._dispatcher.call('setUp', [normalizedOptions], callback)
   }
 
   // eslint-disable-next-line no-use-before-define

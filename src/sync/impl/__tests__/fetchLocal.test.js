@@ -19,7 +19,7 @@ describe('fetchLocalChanges', () => {
     // check
     expect(pCreated1._raw._status).toBe('created')
     expect(pUpdated._raw._status).toBe('updated')
-    expect(pUpdated._raw._changed).toBe('name')
+    expect(pUpdated._raw._changed).toBe('updated_at,updated_tz,name')
 
     expect(tDeleted._raw._status).toBe('deleted')
     const expectedChanges = clone(

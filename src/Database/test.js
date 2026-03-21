@@ -276,7 +276,7 @@ describe('Database', () => {
         ['update', 'mock_tasks', m1._raw],
         ['create', 'mock_tasks', m5._raw],
         ['update', 'mock_comments', m2._raw],
-        ['markAsDeleted', 'mock_tasks', m3.id],
+        ['update', 'mock_tasks', m3._raw],
         ['destroyPermanently', 'mock_comments', m4.id],
       ])
 
@@ -410,7 +410,7 @@ describe('Database', () => {
         expect(spy).toHaveBeenCalledWith(`prepareMarkAsDeleted: mock_tasks#${t2.id}`)
         expect(spy).toHaveBeenCalledWith(`prepareDestroyPermanently: mock_projects#${p1.id}`)
         expect(spy).toHaveBeenLastCalledWith(
-          `batch: update mock_tasks#${t1.id}, markAsDeleted mock_tasks#${t2.id}, destroyPermanently mock_projects#${p1.id}`,
+          `batch: update mock_tasks#${t1.id}, update mock_tasks#${t2.id}, destroyPermanently mock_projects#${p1.id}`,
         )
       })
     })
