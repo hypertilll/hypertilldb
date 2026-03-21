@@ -45,6 +45,12 @@ export default class Model {
 
   get syncStatus(): SyncStatus
 
+  get createdAt(): Date | null
+
+  get updatedAt(): Date | null
+
+  get deletedAt(): Date | null
+
   // Modifies the model (using passed function) and saves it to the database.
   // Touches `updatedAt` if available.
   //

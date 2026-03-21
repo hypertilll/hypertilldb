@@ -19,6 +19,20 @@ import { ensureDecoratorUsedProperly } from '../common'
 const cache = new Map<number, Date>()
 onLowMemory(() => cache.clear())
 
+export function cachedDateFromRaw(rawValue: mixed): ?Date {
+  if (typeof rawValue === 'number') {
+    const cached = cache.get(rawValue)
+    if (cached) {
+      return cached
+    }
+    const date = new Date(rawValue)
+    cache.set(rawValue, date)
+    return date
+  }
+
+  return null
+}
+
 const dateDecorator: Decorator = makeDecorator(
   (columnName: ColumnName) => (target: Object, key: string, descriptor: Object) => {
     ensureDecoratorUsedProperly(columnName, target, key, descriptor)
@@ -28,17 +42,7 @@ const dateDecorator: Decorator = makeDecorator(
       enumerable: true,
       get(): ?Date {
         // $FlowFixMe
-        const rawValue = this.asModel._getRaw(columnName)
-        if (typeof rawValue === 'number') {
-          const cached = cache.get(rawValue)
-          if (cached) {
-            return cached
-          }
-          const date = new Date(rawValue)
-          cache.set(rawValue, date)
-          return date
-        }
-        return null
+        return cachedDateFromRaw(this.asModel._getRaw(columnName))
       },
       set(date: ?Date): void {
         const rawValue = date ? +new Date(date) : null

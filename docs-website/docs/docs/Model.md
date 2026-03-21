@@ -65,8 +65,6 @@ export class Book extends Model {
   @text('title') title!: string
   @text('author') author!: string
   @text('status') status!: string
-  @field('created_at') createdAt!: number
-  @field('updated_at') updatedAt!: number
 }
 ```
 
@@ -94,6 +92,24 @@ That assumes your schema contains:
 ```ts
 { name: 'last_opened_at', type: 'number', isOptional: true }
 ```
+
+## Built-in timestamps
+
+Every persisted `Model` reserves these getters:
+
+- `createdAt`
+- `updatedAt`
+- `deletedAt`
+
+When the matching metadata columns exist, they return `Date | null`. With `createPlatformAdapter()` and the built-in SQLite/Loki adapters, those columns are normalized for you automatically, so you do not declare timestamp fields on each model.
+
+```ts
+const created = book.createdAt
+const updated = book.updatedAt
+const deleted = book.deletedAt
+```
+
+Avoid reusing those property names for unrelated fields.
 
 ## To-one relations
 
@@ -186,8 +202,6 @@ export class Book extends Model {
   @text('title') title!: string
   @text('author') author!: string
   @text('status') status!: string
-  @field('created_at') createdAt!: number
-  @field('updated_at') updatedAt!: number
   @children('chapters') chapters!: Query<Chapter>
 }
 
@@ -200,8 +214,6 @@ export class Chapter extends Model {
   @field('book_id') bookId!: string
   @text('title') title!: string
   @field('position') position!: number
-  @field('created_at') createdAt!: number
-  @field('updated_at') updatedAt!: number
   @relation('books', 'book_id') book!: Relation<Book>
 }
 

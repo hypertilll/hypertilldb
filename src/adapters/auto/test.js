@@ -3,7 +3,7 @@ import Database from '../../Database'
 import Model from '../../Model'
 import LokiJSAdapter from '../lokijs'
 import SqliteAdapter from '../sqlite'
-import { date, readonly, text } from '../../decorators'
+import { text } from '../../decorators'
 
 const schema = appSchema({
   version: 1,
@@ -32,18 +32,6 @@ class AutoMetadataModel extends Model {
   static table = 'auto_test'
 
   @text('name') name
-
-  @readonly
-  @date('created_at')
-  createdAt
-
-  @readonly
-  @date('updated_at')
-  updatedAt
-
-  @readonly
-  @date('deleted_at')
-  deletedAt
 }
 
 describe('createPlatformAdapter', () => {
@@ -141,6 +129,46 @@ describe('createPlatformAdapter', () => {
     expect(record.updatedAt).toBeInstanceOf(Date)
     expect(+record.createdAt).toBe(+record.updatedAt)
     expect(record.deletedAt).toBe(null)
+  })
+
+  it('updates built-in timestamp getters through create, update, and delete without manual decorators', async () => {
+    const adapter = new LokiJSAdapter({
+      dbName: 'auto-metadata-lifecycle-test',
+      schema,
+      useWebWorker: false,
+      useIncrementalIndexedDB: false,
+    })
+    const database = new Database({
+      adapter,
+      modelClasses: [AutoMetadataModel],
+    })
+
+    let record
+    await database.write(async () => {
+      record = await database.get('auto_test').create((model) => {
+        model.name = 'Lifecycle'
+        model._raw.updated_at -= 100
+      })
+    })
+
+    const createdAt = +record.createdAt
+    const updatedAt = +record.updatedAt
+
+    await database.write(async () => {
+      await record.update((model) => {
+        model.name = 'Lifecycle updated'
+      })
+    })
+
+    expect(+record.createdAt).toBe(createdAt)
+    expect(+record.updatedAt).toBeGreaterThan(updatedAt)
+    expect(record.deletedAt).toBe(null)
+
+    await database.write(async () => {
+      await record.markAsDeleted()
+    })
+
+    expect(record.deletedAt).toBeInstanceOf(Date)
   })
 
   it('makes timestamp metadata available without declaring those columns for direct sqlite usage', async () => {

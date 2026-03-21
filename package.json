@@ -1,7 +1,7 @@
 {
   "name": "@hypertill/db",
   "description": "Reactive offline-first database framework for React and React Native apps",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "engines": {
     "node": ">=18"
   },
@@ -33,8 +33,7 @@
     "docs:version": "cd docs-website && npm version --no-git-tag-version",
     "docs:dev": "./scripts/update-docusaurus && cd docs-website && npm run start",
     "docs:build": "./scripts/update-docusaurus && cd docs-website && npm run build",
-    "docs:deploy": "./scripts/update-docusaurus && cd docs-website && npm run deploy",
-    "postinstall": "patch-package"
+    "docs:deploy": "./scripts/update-docusaurus && cd docs-website && npm run deploy"
   },
   "types": "src/index.d.ts",
   "author": "HelaPoint",
